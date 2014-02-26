@@ -68,8 +68,8 @@ public class SWC implements ListSelectionListener, ActionListener, PropertyChang
 		
 		for(int i=0; i<366; i++) {
 			if(i<365)
-				doy365[i] = String.valueOf(i);
-			doy366[i] = String.valueOf(i);
+				doy365[i] = String.valueOf(i+1);
+			doy366[i] = String.valueOf(i+1);
 		}
 	}
 	
@@ -144,6 +144,7 @@ public class SWC implements ListSelectionListener, ActionListener, PropertyChang
 			list_doy.setSelectedIndex(0);
 		}
 		if(list_years.getModel().getSize() == 0 && list_years.getSelectedIndex() == -1) {
+			table_swc_historyInput.removeAll();
 			table_swc_historyInput.setModel(getModel(this.nLayers));
 			for(int i=0; i<this.nLayers; i++) {
 				table_swc_historyInput.setValueAt(i+1, i, 0);
@@ -156,9 +157,10 @@ public class SWC implements ListSelectionListener, ActionListener, PropertyChang
 	
 	private void onGet_HIST(int year) {
 		if(list_index_year != -1) {
+			year = Integer.parseInt(list_years.getSelectedValuesList().get(year));
 			this.hist.setCurrentYear(year);
 			int rows = this.hist.getLayers();
-			int doy = Integer.parseInt(list_doy.getSelectedValue());
+			int doy = Integer.parseInt(list_doy.getModel().getElementAt(list_index_day))-1;
 			
 			for(int i=0; i<rows; i++) {
 				double swc = ((Number)table_swc_historyInput.getValueAt(i, 1)).doubleValue();
@@ -170,12 +172,18 @@ public class SWC implements ListSelectionListener, ActionListener, PropertyChang
 	}
 	private void onSet_HIST() {
 		hist.setCurrentYear(Integer.parseInt(list_years.getSelectedValue()));
-		table_swc_historyInput.setModel(getModel(hist.getDays()));
-		int doy = Integer.parseInt(list_doy.getSelectedValue());
+		table_swc_historyInput.removeAll();
+		table_swc_historyInput.setModel(getModel(this.nLayers));
+		int doy = 0;
+		if(list_doy.getModel().getSize() != 0 && list_doy.getSelectedIndex() != -1) {
+			doy = Integer.parseInt(list_doy.getSelectedValue())-1;
+		}
 		for(int i=0; i<this.hist.getLayers(); i++) {
+			double swc = hist.getSWC(doy,i);
+			double std_error = hist.getStd_err(doy, i);
 			table_swc_historyInput.setValueAt(i+1, i, 0);
-			table_swc_historyInput.setValueAt(hist.getSWC(doy)[i], i, 1);
-			table_swc_historyInput.setValueAt(hist.getStd_err(doy)[i], i, 2);
+			table_swc_historyInput.setValueAt(swc, i, 1);
+			table_swc_historyInput.setValueAt(std_error, i, 2);
 		}
 	}
 	
@@ -288,6 +296,7 @@ public class SWC implements ListSelectionListener, ActionListener, PropertyChang
 		panel_swc_historyButtons.add(lbl_layers);
 		
 		formattedTextField_swc_historyLayers = new JFormattedTextField(format_int);
+		formattedTextField_swc_historyLayers.addPropertyChangeListener(this);
 		formattedTextField_swc_historyLayers.setColumns(2);
 		panel_swc_historyButtons.add(formattedTextField_swc_historyLayers);
 		
@@ -353,12 +362,13 @@ public class SWC implements ListSelectionListener, ActionListener, PropertyChang
 	    }
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
 		JList<String> lsm = (JList<String>)e.getSource();
 		if(lsm.getName() == "year") {
 			if(!e.getValueIsAdjusting() && !lsm.isSelectionEmpty()) {
-				if(list_index_year != -1) onGet_HIST(list_index_year);
+				if(list_index_year != -1 && list_index_day != -1) onGet_HIST(list_index_year);
 				int minIndex = lsm.getMinSelectionIndex();
 				int maxIndex = lsm.getMaxSelectionIndex();
 				for(int i=minIndex; i<=maxIndex; i++) {
@@ -372,7 +382,7 @@ public class SWC implements ListSelectionListener, ActionListener, PropertyChang
 		}
 		if(lsm.getName() == "day") {
 			if(!e.getValueIsAdjusting() && !lsm.isSelectionEmpty()) {
-				if(list_index_day != -1) onGet_HIST(list_index_day);
+				if(list_index_day != -1 && list_index_year != -1) onGet_HIST(list_index_year);
 				int minIndex = lsm.getMinSelectionIndex();
 				int maxIndex = lsm.getMaxSelectionIndex();
 				for(int i=minIndex; i<=maxIndex; i++) {
@@ -388,33 +398,7 @@ public class SWC implements ListSelectionListener, ActionListener, PropertyChang
 	
 	public DefaultTableModel getModel(int layers) {
 		DefaultTableModel model = new DefaultTableModel(
-				new Object[][] {
-					{new Integer(1), null, null},
-					{new Integer(2), null, null},
-					{new Integer(3), null, null},
-					{new Integer(4), null, null},
-					{new Integer(5), null, null},
-					{new Integer(6), null, null},
-					{new Integer(7), null, null},
-					{new Integer(8), null, null},
-					{new Integer(9), null, null},
-					{new Integer(10), null, null},
-					{new Integer(11), null, null},
-					{new Integer(12), null, null},
-					{new Integer(13), null, null},
-					{new Integer(14), null, null},
-					{new Integer(15), null, null},
-					{new Integer(16), null, null},
-					{new Integer(17), null, null},
-					{new Integer(18), null, null},
-					{new Integer(19), null, null},
-					{new Integer(20), null, null},
-					{new Integer(21), null, null},
-					{new Integer(22), null, null},
-					{new Integer(23), null, null},
-					{new Integer(24), null, null},
-					{new Integer(25), null, null},
-				},
+				new Object[layers][3],
 				new String[] {
 					"Layer", "SWC", "stderr"
 				}
@@ -438,8 +422,9 @@ public class SWC implements ListSelectionListener, ActionListener, PropertyChang
 					return columnEditables[column];
 				}
 			};
-		for(int i=layers; i<25; i++)
-			model.removeRow(i);
+		
+		//for(int i=layers; i<25; i++)
+		//	model.removeRow(i);
 		return model;
 	}
 
