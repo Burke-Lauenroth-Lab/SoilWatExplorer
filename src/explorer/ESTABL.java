@@ -15,6 +15,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -459,15 +460,18 @@ public class ESTABL implements ListSelectionListener, ActionListener{
 		Object src = e.getSource();
 
 	    if (src == btn_estab_addSPP) {
-	    	if(text_estab_addSPP_name.getText() != "") {
-	    		//add to list
-	    		this.estab.estabFiles.add(text_estab_addSPP_name.getText());
-	    		this.estab.spps.add(new SPP_INPUT_DATA());
-	    		//Save current spp
-	    		onGet_SPP(this.list_estab_spp.getSelectedIndex());
-	    		onReset_list();
+	    	if(this.estab.estabFiles.contains(text_estab_addSPP_name.getText())) {
+	    		JOptionPane.showMessageDialog(null, "The SPP file "+text_estab_addSPP_name.getText()+" already exists.", "Alert", JOptionPane.ERROR_MESSAGE);
+	    	} else {
+	    		if(text_estab_addSPP_name.getText() != "") {
+	    			//add to list
+	    			this.estab.estabFiles.add(text_estab_addSPP_name.getText());
+	    			this.estab.spps.add(new SPP_INPUT_DATA());
+	    			//Save current spp
+	    			onGet_SPP(this.list_estab_spp.getSelectedIndex());
+	    			onReset_list();
+	    		}
 	    	}
-	    		
 	    } else if (src == btn_estab_removeSPP) {
 	    	if(list_estab_spp.getModel().getSize() != 0 && list_estab_spp.getSelectedIndex() != -1) {
 	    		int remove = this.list_estab_spp.getSelectedIndex();

@@ -62,11 +62,10 @@ public class SWExplorer {
 	private ESTABL estab;
 	private CLOUD cloud;
 	private WEATHER weather;
+	private SWC swc;
 	
 	private JFrame frame;
 	
-	private JTextField textField_swc_filePrefix;
-	private JTable table_swc_historyInput;
 	private JTextField textField_output_prefixTEMP;
 	private JTextField textField_output_prefixPRECIP;
 	private JTextField textField_output_prefixSOILINFILT;
@@ -121,6 +120,7 @@ public class SWExplorer {
 		estab = new ESTABL(inputData.estabIn);
 		cloud = new CLOUD(inputData.cloudIn);
 		weather = new WEATHER(inputData.weatherSetupIn, inputData.weatherHist);
+		swc = new SWC(inputData.swcSetupIn, inputData.swcHist);
 		initialize();
 		prod.onSetValues();
 		soils.onSetValues();
@@ -130,6 +130,7 @@ public class SWExplorer {
 		estab.onSetValues();
 		cloud.onSetValues();
 		weather.onSetValues();
+		swc.onSetValues();
 	}
 
 	/**
@@ -162,148 +163,7 @@ public class SWExplorer {
 		tabbedPane.addTab("Establishment", null, estab.onGetPanel_establ(), null);
 		tabbedPane.addTab("Cloud", null, cloud.onGetPanel_cloud(), null);
 		tabbedPane.addTab("Weather Setup", null, weather.onGetPanel_weather(), null);
-		
-		JPanel panel_swc = new JPanel();
-		tabbedPane.addTab("SWC Setup", null, panel_swc, null);
-		panel_swc.setLayout(new BorderLayout(0, 0));
-		
-		JPanel panel_swc_left = new JPanel();
-		panel_swc.add(panel_swc_left, BorderLayout.WEST);
-		panel_swc_left.setLayout(new BoxLayout(panel_swc_left, BoxLayout.PAGE_AXIS));
-		
-		JPanel panel_swc_setup = new JPanel();
-		panel_swc_setup.setAlignmentY(Component.TOP_ALIGNMENT);
-		panel_swc_left.add(panel_swc_setup);
-		panel_swc_setup.setLayout(new FormLayout(new ColumnSpec[] {
-				FormFactory.DEFAULT_COLSPEC,
-				FormFactory.DEFAULT_COLSPEC,},
-			new RowSpec[] {
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,}));
-		
-		JLabel lbl_swc_label = new JLabel("Measured SWC Setup Parameters");
-		panel_swc_setup.add(lbl_swc_label, "1, 1, 2, 1");
-		
-		JCheckBox chckbx_swc_useSWCData = new JCheckBox("");
-		panel_swc_setup.add(chckbx_swc_useSWCData, "1, 3");
-		
-		JLabel lbl_swc_useData = new JLabel("SWC historic data file");
-		lbl_swc_useData.setFont(new Font("Dialog", Font.PLAIN, 12));
-		panel_swc_setup.add(lbl_swc_useData, "2, 3");
-		
-		textField_swc_filePrefix = new JTextField();
-		panel_swc_setup.add(textField_swc_filePrefix, "1, 5, left, default");
-		textField_swc_filePrefix.setColumns(7);
-		
-		JLabel lbl_swc_prefix = new JLabel("Data File Prefix");
-		lbl_swc_prefix.setFont(new Font("Dialog", Font.PLAIN, 12));
-		panel_swc_setup.add(lbl_swc_prefix, "2, 5");
-		
-		JFormattedTextField formattedTextField_swc_firstYear = new JFormattedTextField();
-		formattedTextField_swc_firstYear.setColumns(7);
-		panel_swc_setup.add(formattedTextField_swc_firstYear, "1, 7, left, default");
-		
-		JLabel lbl_swc_firstYear = new JLabel("First Year of Measurement data files");
-		lbl_swc_firstYear.setFont(new Font("Dialog", Font.PLAIN, 12));
-		panel_swc_setup.add(lbl_swc_firstYear, "2, 7");
-		
-		JLabel lbl_swc_Method = new JLabel("Method");
-		lbl_swc_Method.setFont(new Font("Dialog", Font.PLAIN, 12));
-		panel_swc_setup.add(lbl_swc_Method, "1, 9, 2, 1, center, default");
-		
-		JComboBox comboBox_swc_method = new JComboBox();
-		comboBox_swc_method.setModel(new DefaultComboBoxModel(new String[] {"1 - Average with model", "2 - Measured +/- stderr"}));
-		comboBox_swc_method.setSelectedIndex(1);
-		panel_swc_setup.add(comboBox_swc_method, "1, 11, 2, 1, fill, default");
-		
-		JPanel panel_swc_historySelect = new JPanel();
-		panel_swc_historySelect.setAlignmentY(Component.TOP_ALIGNMENT);
-		panel_swc_left.add(panel_swc_historySelect);
-		panel_swc_historySelect.setLayout(new BoxLayout(panel_swc_historySelect, BoxLayout.PAGE_AXIS));
-		
-		JScrollPane scrollPane_swc_swcYearList = new JScrollPane();
-		panel_swc_historySelect.add(scrollPane_swc_swcYearList);
-		JList list_1 = new JList();
-		list_1.setVisibleRowCount(30);
-		scrollPane_swc_swcYearList.setViewportView(list_1);
-		
-		JPanel panel_swc_historyButtons = new JPanel();
-		panel_swc_historySelect.add(panel_swc_historyButtons);
-		
-		JButton btn_swc_remove = new JButton("-");
-		panel_swc_historyButtons.add(btn_swc_remove);
-		
-		JButton btn_swc_add = new JButton("+");
-		panel_swc_historyButtons.add(btn_swc_add);
-		
-		JFormattedTextField formattedTextField_swc_historyAddYear = new JFormattedTextField(format);
-		formattedTextField_swc_historyAddYear.setColumns(5);
-		formattedTextField_swc_historyAddYear.setValue(new Integer(0));
-		panel_swc_historyButtons.add(formattedTextField_swc_historyAddYear);
-		
-		JPanel panel_swc_right = new JPanel();
-		panel_swc.add(panel_swc_right, BorderLayout.CENTER);
-		
-		table_swc_historyInput = new JTable();
-		table_swc_historyInput.setModel(new DefaultTableModel(
-			new Object[][] {
-				{new Integer(1), new Integer(1), null, null},
-				{new Integer(1), new Integer(2), null, null},
-				{new Integer(1), new Integer(3), null, null},
-				{new Integer(1), new Integer(4), null, null},
-				{new Integer(1), new Integer(5), null, null},
-				{new Integer(1), new Integer(6), null, null},
-				{new Integer(1), new Integer(7), null, null},
-				{new Integer(1), new Integer(8), null, null},
-				{new Integer(1), new Integer(9), null, null},
-				{new Integer(1), new Integer(10), null, null},
-				{new Integer(1), new Integer(11), null, null},
-				{new Integer(1), new Integer(12), null, null},
-				{new Integer(1), new Integer(13), null, null},
-				{new Integer(1), new Integer(14), null, null},
-				{new Integer(1), new Integer(15), null, null},
-				{new Integer(1), new Integer(16), null, null},
-				{new Integer(1), new Integer(17), null, null},
-				{new Integer(1), new Integer(18), null, null},
-				{new Integer(1), new Integer(19), null, null},
-				{new Integer(1), new Integer(20), null, null},
-				{new Integer(1), new Integer(21), null, null},
-				{new Integer(1), new Integer(22), null, null},
-				{new Integer(1), new Integer(23), null, null},
-				{new Integer(1), new Integer(24), null, null},
-				{new Integer(1), new Integer(25), null, null},
-			},
-			new String[] {
-				"DOY", "Layer", "SWC", "stderr"
-			}
-		) {
-			Class[] columnTypes = new Class[] {
-				Integer.class, Integer.class, Double.class, Double.class
-			};
-			public Class getColumnClass(int columnIndex) {
-				return columnTypes[columnIndex];
-			}
-			boolean[] columnEditables = new boolean[] {
-				false, false, true, true
-			};
-			public boolean isCellEditable(int row, int column) {
-				return columnEditables[column];
-			}
-		});
-		table_swc_historyInput.getColumnModel().getColumn(0).setResizable(false);
-		table_swc_historyInput.getColumnModel().getColumn(1).setResizable(false);
-		panel_swc_right.setLayout(new BoxLayout(panel_swc_right, BoxLayout.X_AXIS));
-		panel_swc_right.add(table_swc_historyInput);
-		panel_swc_right.add(new JScrollPane(table_swc_historyInput));
+		tabbedPane.addTab("SWC Setup", null, swc.onGetPanel_swc(), null);
 		
 		JPanel panel_output = new JPanel();
 		tabbedPane.addTab("Output Setup", null, panel_output, null);

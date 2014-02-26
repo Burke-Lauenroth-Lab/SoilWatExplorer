@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.Format;
 import java.text.NumberFormat;
+import java.util.Collections;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -14,6 +15,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -41,6 +43,10 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 	private JFormattedTextField formattedTextField_pct_snowRunoff;
 	private JCheckBox chckbx_weather_useMarkov;
 	private JFormattedTextField formattedTextField_days_in_runavg;
+	private JFormattedTextField formattedTextField_insertYear;
+	
+	JButton btn_weather_historyAdd;
+	JButton btn_weather_historyRemove;
 	
 	private int list_index=-1;
 	
@@ -50,7 +56,24 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 	}
 	
 	public void onGetValues() {
+		weatherSetupIn.use_snow = chckbx_weather_snowAccumulation.isSelected();
+		weatherSetupIn.pct_snowdrift = ((Number)formattedTextField_pct_snowdrift.getValue()).doubleValue();
+		weatherSetupIn.pct_snowRunoff = ((Number)formattedTextField_pct_snowRunoff.getValue()).doubleValue();
+		weatherSetupIn.use_markov = chckbx_weather_useMarkov.isSelected();
+		weatherSetupIn.days_in_runavg = ((Number)formattedTextField_days_in_runavg.getValue()).intValue();
 		
+		for(int i=0; i<12; i++) {
+			weatherSetupIn.scale_precip[i] = ((Number)table_weather_monthlyScalingParam.getValueAt(i, 1)).doubleValue();
+			weatherSetupIn.scale_temp_max[i] = ((Number)table_weather_monthlyScalingParam.getValueAt(i, 2)).doubleValue();
+			weatherSetupIn.scale_temp_min[i] = ((Number)table_weather_monthlyScalingParam.getValueAt(i, 3)).doubleValue();
+			weatherSetupIn.scale_skyCover[i] = ((Number)table_weather_monthlyScalingParam.getValueAt(i, 4)).doubleValue();
+			weatherSetupIn.scale_wind[i] = ((Number)table_weather_monthlyScalingParam.getValueAt(i, 5)).doubleValue();
+			weatherSetupIn.scale_rH[i] = ((Number)table_weather_monthlyScalingParam.getValueAt(i, 6)).doubleValue();
+			weatherSetupIn.scale_transmissivity[i] = ((Number)table_weather_monthlyScalingParam.getValueAt(i, 7)).doubleValue();
+		}
+		//Save Current Year
+		int year = Integer.parseInt(list_historyYears.getSelectedValue());
+		onGet_HIST(year);
 	}
 	
 	public void onSetValues() {
@@ -76,18 +99,34 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 	private void onReset_list() {
 		this.list_index = -1;
 		list_historyYears.removeAll();
-		list_historyYears.setListData(weatherHist.getHistYears());
+		list_historyYears.setListData(weatherHist.getHistYearsString());
 		list_historyYears.setSelectedIndex(0);
 		
 		if(list_historyYears.getModel().getSize() == 0 && list_historyYears.getSelectedIndex() == -1) {
-			
-		} else {
-			
+			table_weather_History.setModel(getModel(365));
+			for(int i=0; i<365; i++) {
+				table_weather_History.setValueAt(i+1, i, 0);
+				table_weather_History.setValueAt(0.0, i, 1);
+				table_weather_History.setValueAt(0.0, i, 2);
+				table_weather_History.setValueAt(0.0, i, 3);
+			}
 		}
 	}
 	
 	private void onGet_HIST(int year) {
-		
+		if(list_index != -1) {
+			this.weatherHist.setCurrentYear(year);
+			int rows = this.weatherHist.getDays();
+			
+			for(int i=0; i<rows; i++) {
+				double temp_max = ((Number)table_weather_History.getValueAt(i, 1)).doubleValue();
+				double temp_min = ((Number)table_weather_History.getValueAt(i, 2)).doubleValue();
+				double ppt = ((Number)table_weather_History.getValueAt(i, 3)).doubleValue();
+				
+				this.weatherHist.set_day(i, ppt, temp_max, temp_min);
+			}
+			this.weatherHist.onCalcData();
+		}
 	}
 	private void onSet_HIST() {
 		weatherHist.setCurrentYear(Integer.parseInt(list_historyYears.getSelectedValue()));
@@ -272,29 +311,32 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 		JScrollPane scrollPane_weather_weatherYearList = new JScrollPane();
 		panel_weather_list.add(scrollPane_weather_weatherYearList);
 		list_historyYears = new JList<String>();
+		list_historyYears.setVisibleRowCount(10);
 		list_historyYears.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		list_historyYears.addListSelectionListener(this);
 		scrollPane_weather_weatherYearList.setViewportView(list_historyYears);
 		
 		JPanel panel_weather_list_control = new JPanel();
 		panel_weather_WeatherYears.add(panel_weather_list_control, BorderLayout.CENTER);
-		
-		JButton btn_weather_historyRemove = new JButton("-");
+			
+		btn_weather_historyRemove = new JButton("-");
+		btn_weather_historyRemove.addActionListener(this);
 		panel_weather_list_control.add(btn_weather_historyRemove);
 		
-		JButton btn_weather_historyAdd = new JButton("+");
+		btn_weather_historyAdd = new JButton("+");
+		btn_weather_historyAdd.addActionListener(this);
 		panel_weather_list_control.add(btn_weather_historyAdd);
 		
 		JLabel lbl_weather_addYear = new JLabel("Year:");
 		panel_weather_list_control.add(lbl_weather_addYear);
 		
-		JFormattedTextField formattedTextField = new JFormattedTextField(format_int);
-		formattedTextField.setColumns(5);
-		formattedTextField.setValue(new Integer(1987));
-		panel_weather_list_control.add(formattedTextField);
+		formattedTextField_insertYear = new JFormattedTextField(format_int);
+		formattedTextField_insertYear.setColumns(5);
+		formattedTextField_insertYear.setValue(new Integer(Collections.max(this.weatherHist.getHistYearsInteger())+1));
+		panel_weather_list_control.add(formattedTextField_insertYear);
 		
 		table_weather_History = new JTable();
-		table_weather_History.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		table_weather_History.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		table_weather_History.setModel(getModel(366));
 		table_weather_History.getColumnModel().getColumn(0).setResizable(false);
 		table_weather_History.getColumnModel().getColumn(0).setPreferredWidth(35);
@@ -305,7 +347,32 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {}
+	public void actionPerformed(ActionEvent e) {
+		Object src = e.getSource();
+
+	    if (src == btn_weather_historyAdd) {
+	    	int Year = ((Number)formattedTextField_insertYear.getValue()).intValue();
+	    	int diy = soilwat.Times.Time_get_lastdoy_y(Year);
+	    	if(this.weatherHist.getHistYearsInteger().contains(Year)) {
+	    		JOptionPane.showMessageDialog(null, "The weather list already contains year "+String.valueOf(Year), "Alert", JOptionPane.ERROR_MESSAGE);
+	    	} else {
+	    		if(formattedTextField_insertYear.getText() != "") {
+	    			//add to list
+	    			this.weatherHist.add_year(Year, new double[diy], new double[diy], new double[diy]);
+	    			//Save current Hist
+	    			formattedTextField_insertYear.setValue(new Integer(Year+1));
+	    			onGet_HIST(this.list_index);
+	    			onReset_list();
+	    		}
+	    	}
+	    } else if (src == btn_weather_historyRemove) {
+	    	if(list_historyYears.getModel().getSize() != 0 && list_historyYears.getSelectedIndex() != -1) {
+	    		int remove = Integer.parseInt(this.list_historyYears.getSelectedValue().toString());
+	    		this.weatherHist.remove(remove);
+	    		onReset_list();
+	    	}
+	    }
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -320,6 +387,7 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 					this.list_index = i;
 				}
 			}
+			//this.weatherHist.setCurrentYear(Integer.parseInt(list_historyYears.getSelectedValue()));
 			onSet_HIST();
 		}
 	}
