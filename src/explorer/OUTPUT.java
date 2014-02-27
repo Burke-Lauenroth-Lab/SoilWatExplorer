@@ -84,12 +84,14 @@ public class OUTPUT implements ActionListener{
 			comboBox_sep.setSelectedIndex(3);
 		for(int i=0; i<28; i++) {
 			if(key_use.get(i) != null) {
-				key_use.get(i).setSelected(out.outputs[i].use);
-				key_sumType.get(i).setSelectedIndex(out.outputs[i].sumtype.idx());
-				key_Period.get(i).setSelectedIndex(out.outputs[i].periodColumn.idx());
-				key_start.get(i).setValue(out.outputs[i].first_orig);
-				key_end.get(i).setValue(out.outputs[i].last_orig);
-				key_filePrefix.get(i).setText(out.outputs[i].filename_prefix);
+				if(out.outputs[i] != null) {
+					key_use.get(i).setSelected(out.outputs[i].use);
+					key_sumType.get(i).setSelectedIndex(out.outputs[i].sumtype.idx());
+					key_Period.get(i).setSelectedIndex(out.outputs[i].periodColumn.idx());
+					key_start.get(i).setValue(out.outputs[i].first_orig);
+					key_end.get(i).setValue(out.outputs[i].last_orig);
+					key_filePrefix.get(i).setText(out.outputs[i].filename_prefix);
+				}
 			}
 		}
 		checkEnableKeys();

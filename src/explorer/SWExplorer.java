@@ -326,9 +326,9 @@ public class SWExplorer implements ActionListener, MenuListener{
 		if(src == mntm_close) {
 			String title = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
 			int index = titles.indexOf(tabbedPane.getTitleAt(tabbedPane.getSelectedIndex()));
-			tabbedPane.remove(tabbedPane.getSelectedComponent());
 			titles.remove(index);
 			nameToProject.remove(title);
+			tabbedPane.remove(tabbedPane.getSelectedComponent());
 		}
 		if(src == mntm_closeAll) {
 			tabbedPane.removeAll();
@@ -359,6 +359,9 @@ public class SWExplorer implements ActionListener, MenuListener{
 		        	titles.add(index, prjName);
 		        	nameToProject.get(tabbedPane.getTitleAt(tabbedPane.getSelectedIndex())).ProjectName = prjName;
 		        	nameToProject.get(tabbedPane.getTitleAt(tabbedPane.getSelectedIndex())).onSave(file.getParent().toString());
+		        	nameToProject.get(tabbedPane.getTitleAt(tabbedPane.getSelectedIndex())).onSetInput();
+		        	SoilWat obj = nameToProject.remove(tabbedPane.getTitleAt(tabbedPane.getSelectedIndex()));
+		        	nameToProject.put(prjName, obj);
 		        	tabbedPane.setTitleAt(tabbedPane.getSelectedIndex(), prjName);
 	        	}
 	        } else {

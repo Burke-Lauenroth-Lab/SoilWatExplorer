@@ -24,6 +24,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
+import charts.Weather;
+
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -329,6 +331,17 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 		
 		JLabel lbl_weather_addYear = new JLabel("Year:");
 		panel_weather_list_control.add(lbl_weather_addYear);
+		
+		JButton plot = new JButton("Plot");
+		plot.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				charts.Weather w = new Weather("Weather Plot", "Chart", weatherHist);
+				w.pack();
+				w.setVisible(true);
+			}
+		});
+		panel_weather_list_control.add(plot);
 		
 		formattedTextField_insertYear = new JFormattedTextField(format_int);
 		formattedTextField_insertYear.setColumns(5);
