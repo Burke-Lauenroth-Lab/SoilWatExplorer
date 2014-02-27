@@ -124,16 +124,32 @@ public class SITE {
 		siteIn.transpRegions.onClear();
 		
 		if(checkBox_swc_transpiration_use_shallow.isSelected())
-			siteIn.transpRegions.set(0, ((Number)spinner_swc_transpiration_shallow.getValue()).intValue());
+			try {
+				siteIn.transpRegions.set(1, ((Number)spinner_swc_transpiration_shallow.getValue()).intValue());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		
 		if(checkBox_swc_transpiration_use_medium.isSelected())
-			siteIn.transpRegions.set(0, ((Number)spinner_swc_transpiration_medium.getValue()).intValue());
+			try {
+				siteIn.transpRegions.set(2, ((Number)spinner_swc_transpiration_medium.getValue()).intValue());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		
 		if(checkBox_swc_transpiration_use_deep.isSelected())
-			siteIn.transpRegions.set(0, ((Number)spinner_swc_transpiration_deep.getValue()).intValue());
+			try {
+				siteIn.transpRegions.set(3, ((Number)spinner_swc_transpiration_deep.getValue()).intValue());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		
 		if(checkBox_swc_transpiration_use_veryDeep.isSelected())
-			siteIn.transpRegions.set(0, ((Number)spinner_swc_transpiration_veryDeep.getValue()).intValue());
+			try {
+				siteIn.transpRegions.set(4, ((Number)spinner_swc_transpiration_veryDeep.getValue()).intValue());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 	}
 	
 	public void onSetValues() {

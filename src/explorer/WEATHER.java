@@ -332,7 +332,12 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 		
 		formattedTextField_insertYear = new JFormattedTextField(format_int);
 		formattedTextField_insertYear.setColumns(5);
-		formattedTextField_insertYear.setValue(new Integer(Collections.max(this.weatherHist.getHistYearsInteger())+1));
+		Integer year = null;
+		if(this.weatherHist.data())
+			year = new Integer(Collections.max(this.weatherHist.getHistYearsInteger())+1);
+		else
+			year = new Integer(1950);
+		formattedTextField_insertYear.setValue(year);
 		panel_weather_list_control.add(formattedTextField_insertYear);
 		
 		table_weather_History = new JTable();

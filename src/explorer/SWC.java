@@ -74,7 +74,12 @@ public class SWC implements ListSelectionListener, ActionListener, PropertyChang
 	}
 	
 	public void onGetValues() {
+		swc.hist_use = chckbx_swc_useSWCData.isSelected();
+		swc.filePrefix = textField_swc_filePrefix.getText();
+		swc.yr.setFirst(((Number)formattedTextField_swc_firstYear.getValue()).intValue());
+		swc.method = comboBox_swc_method.getSelectedIndex()+1;
 		
+		onGet_HIST(this.list_index_year);
 	}
 	
 	public void onSetValues() {
@@ -432,8 +437,10 @@ public class SWC implements ListSelectionListener, ActionListener, PropertyChang
 	public void propertyChange(PropertyChangeEvent e) {
 		Object source = e.getSource();
         if (source == formattedTextField_swc_historyLayers) {
-            this.nLayers = ((Number)formattedTextField_swc_historyLayers.getValue()).intValue();
-            this.hist.setLayers(this.nLayers);
+        	if(((Number)formattedTextField_swc_historyLayers.getValue()) != null) {
+        		this.nLayers = ((Number)formattedTextField_swc_historyLayers.getValue()).intValue();
+        		this.hist.setLayers(this.nLayers);
+        	}
         } 
 	}
 }
