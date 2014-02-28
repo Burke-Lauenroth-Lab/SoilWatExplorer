@@ -343,11 +343,11 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 		formattedTextField_insertYear.setValue(year);
 		panel_weather_list_control.add(formattedTextField_insertYear);
 		
-		JButton plot = new JButton("Plot Yr");
+		JButton plot = new JButton("Graph");
 		plot.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				charts.Weather w = new Weather("SWeather Plot", "Chart", weatherHist,Integer.parseInt(list_historyYears.getSelectedValue().toString()));
+				Weather w = new Weather("SWeather Plot", "Chart", weatherHist,Integer.parseInt(list_historyYears.getSelectedValue().toString()));
 				w.pack();
 				w.setVisible(true);
 			}
