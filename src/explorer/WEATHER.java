@@ -279,19 +279,19 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 		table_weather_monthlyScalingParam.getColumnModel().getColumn(6).setPreferredWidth(125);
 		table_weather_monthlyScalingParam.getColumnModel().getColumn(7).setPreferredWidth(95);
 		
-		JLabel lbl_weather_skyCover = new JLabel("# SkyCover = additive for mean monthly sky cover [%]; min(100, max(0, scale + sky cover))");
+		JLabel lbl_weather_skyCover = new JLabel("SkyCover = additive for mean monthly sky cover [%]; min(100, max(0, scale + sky cover))");
 		lbl_weather_skyCover.setFont(new Font("Dialog", Font.PLAIN, 12));
 		panel_weather_monthlyScaleParam.add(lbl_weather_skyCover);
 		
-		JLabel lbl_weather_wind = new JLabel("# Wind = multiplicative for mean monthly wind speed; max(0, scale * wind speed)");
+		JLabel lbl_weather_wind = new JLabel("Wind = multiplicative for mean monthly wind speed; max(0, scale * wind speed)");
 		lbl_weather_wind.setFont(new Font("Dialog", Font.PLAIN, 12));
 		panel_weather_monthlyScaleParam.add(lbl_weather_wind);
 		
-		JLabel lbl_weather_rH = new JLabel("# rH = additive for mean monthly relative humidity [%]; min(100, max(0, scale + rel. Humidity))");
+		JLabel lbl_weather_rH = new JLabel("rH = additive for mean monthly relative humidity [%]; min(100, max(0, scale + rel. Humidity))");
 		lbl_weather_rH.setFont(new Font("Dialog", Font.PLAIN, 12));
 		panel_weather_monthlyScaleParam.add(lbl_weather_rH);
 		
-		JLabel lbl_weather_transmissivity = new JLabel("# Transmissivity = multiplicative for mean monthly relative transmissivity; min(1, max(0, scale * transmissivity))");
+		JLabel lbl_weather_transmissivity = new JLabel("Transmissivity = multiplicative for mean monthly relative transmissivity; min(1, max(0, scale * transmissivity))");
 		lbl_weather_transmissivity.setFont(new Font("Dialog", Font.PLAIN, 12));
 		panel_weather_monthlyScaleParam.add(lbl_weather_transmissivity);
 		panel_weather_monthlyScaleParam.add(table_weather_monthlyScalingParam);
@@ -308,6 +308,7 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 		panel_weather_list.setLayout(new BoxLayout(panel_weather_list, BoxLayout.PAGE_AXIS));
 		
 		JLabel lbl_weather_WeatherHistoryList = new JLabel("Weather History Year List");
+		lbl_weather_WeatherHistoryList.setAlignmentX(Component.CENTER_ALIGNMENT);
 		panel_weather_list.add(lbl_weather_WeatherHistoryList);
 		
 		JScrollPane scrollPane_weather_weatherYearList = new JScrollPane();
@@ -319,8 +320,8 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 		scrollPane_weather_weatherYearList.setViewportView(list_historyYears);
 		
 		JPanel panel_weather_list_control = new JPanel();
-		panel_weather_WeatherYears.add(panel_weather_list_control, BorderLayout.CENTER);
-			
+		panel_weather_list.add(panel_weather_list_control);
+		
 		btn_weather_historyRemove = new JButton("-");
 		btn_weather_historyRemove.addActionListener(this);
 		panel_weather_list_control.add(btn_weather_historyRemove);
@@ -332,17 +333,6 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 		JLabel lbl_weather_addYear = new JLabel("Year:");
 		panel_weather_list_control.add(lbl_weather_addYear);
 		
-		JButton plot = new JButton("Plot");
-		plot.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				charts.Weather w = new Weather("Weather Plot", "Chart", weatherHist);
-				w.pack();
-				w.setVisible(true);
-			}
-		});
-		panel_weather_list_control.add(plot);
-		
 		formattedTextField_insertYear = new JFormattedTextField(format_int);
 		formattedTextField_insertYear.setColumns(5);
 		Integer year = null;
@@ -353,6 +343,20 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 		formattedTextField_insertYear.setValue(year);
 		panel_weather_list_control.add(formattedTextField_insertYear);
 		
+		JButton plot = new JButton("Plot Yr");
+		plot.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				charts.Weather w = new Weather("SWeather Plot", "Chart", weatherHist,Integer.parseInt(list_historyYears.getSelectedValue().toString()));
+				w.pack();
+				w.setVisible(true);
+			}
+		});
+		panel_weather_list_control.add(plot);
+		
+		JPanel panel_source = new JPanel();
+		panel_weather_WeatherYears.add(panel_source, BorderLayout.CENTER);
+				
 		table_weather_History = new JTable();
 		table_weather_History.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		table_weather_History.setModel(getModel(366));

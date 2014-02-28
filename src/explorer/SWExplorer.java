@@ -111,14 +111,42 @@ public class SWExplorer implements ActionListener, MenuListener{
 		}
 		
 		public void onSave(String Project) {
+			control.onGetLog().clear();
 			onGetInput();
 			if(Project!=null)
 				inputData.filesIn.ProjectDirectory = Project;
 			try {
 				control.onSetInput(inputData);
 				control.onWriteOutputs(inputData.filesIn.ProjectDirectory.toString());
+				if(control.onGetLog().size() != 0)
+					JOptionPane.showMessageDialog(null, control.onGetLog(),"Saved", JOptionPane.INFORMATION_MESSAGE);
 			} catch(Exception e) {
-				e.printStackTrace();
+				JOptionPane.showMessageDialog(null, e.toString(),"Alert", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		
+		public void onRun() {
+			control.onGetLog().clear();
+			try {
+				control.onStartModel(false);
+				if(control.onGetLog().size() != 0)
+					JOptionPane.showMessageDialog(null, control.onGetLog(),"Executed", JOptionPane.OK_OPTION);
+			} catch(Exception e) {
+				JOptionPane.showMessageDialog(null, e.toString(),"Error", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		
+		public void onVerify() {
+			control.onGetLog().clear();
+			try {
+				if(control.onVerify()) {
+					if(control.onGetLog().size() != 0)
+						JOptionPane.showMessageDialog(null, control.onGetLog(),"Verified", JOptionPane.INFORMATION_MESSAGE);
+				} else {
+					JOptionPane.showMessageDialog(null, control.onGetLog(),"Error", JOptionPane.ERROR_MESSAGE);
+				}
+			} catch(Exception e) {
+				JOptionPane.showMessageDialog(null, e.toString(),"Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		
@@ -153,7 +181,7 @@ public class SWExplorer implements ActionListener, MenuListener{
 	
 	private JFileChooser fc;
 	
-	private JMenu mnNewMenu;
+	private JMenu mn_File;
 	private JMenuItem mntm_new;
 	private JMenuItem mntm_newDefault;
 	private JMenuItem mntm_open;
@@ -163,6 +191,10 @@ public class SWExplorer implements ActionListener, MenuListener{
 	private JMenuItem mntm_saveAs;
 	private JMenuItem mntm_saveAll;
 	private JMenuItem mntm_exit;
+	private JMenu mn_Project;
+	private JMenuItem mntm_Verify;
+	private JSeparator separator_3;
+	private JMenuItem mntm_Run;
 	
 	/**
 	 * Launch the application.
@@ -204,18 +236,18 @@ public class SWExplorer implements ActionListener, MenuListener{
 		((NumberFormat)format).setGroupingUsed(false);
 		
 		frame = new JFrame();
-		frame.setBounds(100, 100, 1093, 762);
+		frame.setBounds(100, 100, 1093, 790);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		JMenuBar menuBar = new JMenuBar();
 		frame.setJMenuBar(menuBar);
 		
-		mnNewMenu = new JMenu("File");
-		mnNewMenu.addMenuListener(this);
-		menuBar.add(mnNewMenu);
+		mn_File = new JMenu("File");
+		mn_File.addMenuListener(this);
+		menuBar.add(mn_File);
 		
 		JMenu mnNewMenu_new = new JMenu("New");
-		mnNewMenu.add(mnNewMenu_new);
+		mn_File.add(mnNewMenu_new);
 		
 		mntm_new = new JMenuItem("Project");
 		mntm_new.addActionListener(this);
@@ -227,40 +259,55 @@ public class SWExplorer implements ActionListener, MenuListener{
 		
 		mntm_open = new JMenuItem("Open Project");
 		mntm_open.addActionListener(this);
-		mnNewMenu.add(mntm_open);
+		mn_File.add(mntm_open);
 		
 		JSeparator separator = new JSeparator();
-		mnNewMenu.add(separator);
+		mn_File.add(separator);
 		
 		mntm_close = new JMenuItem("Close");
 		mntm_close.addActionListener(this);
-		mnNewMenu.add(mntm_close);
+		mn_File.add(mntm_close);
 		
 		mntm_closeAll = new JMenuItem("Close All");
 		mntm_closeAll.addActionListener(this);
-		mnNewMenu.add(mntm_closeAll);
+		mn_File.add(mntm_closeAll);
 		
 		JSeparator separator_1 = new JSeparator();
-		mnNewMenu.add(separator_1);
+		mn_File.add(separator_1);
 		
 		mntm_save = new JMenuItem("Save");
 		mntm_save.addActionListener(this);
-		mnNewMenu.add(mntm_save);
+		mn_File.add(mntm_save);
 		
 		mntm_saveAs = new JMenuItem("Save As");
 		mntm_saveAs.addActionListener(this);
-		mnNewMenu.add(mntm_saveAs);
+		mn_File.add(mntm_saveAs);
 		
 		mntm_saveAll = new JMenuItem("Save All");
 		mntm_saveAll.addActionListener(this);
-		mnNewMenu.add(mntm_saveAll);
+		mn_File.add(mntm_saveAll);
 		
 		JSeparator separator_2 = new JSeparator();
-		mnNewMenu.add(separator_2);
+		mn_File.add(separator_2);
 		
 		mntm_exit = new JMenuItem("Exit");
 		mntm_exit.addActionListener(this);
-		mnNewMenu.add(mntm_exit);
+		mn_File.add(mntm_exit);
+		
+		mn_Project = new JMenu("Project");
+		mn_Project.addMenuListener(this);
+		menuBar.add(mn_Project);
+		
+		mntm_Verify = new JMenuItem("Verify Project");
+		mntm_Verify.addActionListener(this);
+		mn_Project.add(mntm_Verify);
+		
+		separator_3 = new JSeparator();
+		mn_Project.add(separator_3);
+		
+		mntm_Run = new JMenuItem("Run Project");
+		mntm_Run.addActionListener(this);
+		mn_Project.add(mntm_Run);
 		frame.getContentPane().setLayout(new BorderLayout(0, 0));
 		
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
@@ -374,9 +421,24 @@ public class SWExplorer implements ActionListener, MenuListener{
 				nameToProject.get(title).onSave(null);
 			}
 		}
+		if(src==mntm_Verify) {
+			//Save the project
+			String title = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
+			nameToProject.get(title).onSave(null);
+			
+			nameToProject.get(title).onVerify();
+		}
+		if(src==mntm_Run) {
+			//Save the project
+			String title = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
+			nameToProject.get(title).onSave(null);
+			
+			nameToProject.get(title).onRun();
+		}
 		if(src==mntm_exit) {
 			System.exit(0);
 		}
+		
 	}
 
 	@Override
@@ -390,7 +452,7 @@ public class SWExplorer implements ActionListener, MenuListener{
 	@Override
 	public void menuSelected(MenuEvent e) {
 		Object src = (Object) e.getSource();
-		if(src==mnNewMenu) {
+		if(src==mn_File) {
 			int count = tabbedPane.getTabCount();
 			if(count == 0) {
 				mntm_close.setEnabled(false);

@@ -187,6 +187,9 @@ public class ESTABL implements ListSelectionListener, ActionListener{
 		}
 	}
 	
+	/**
+	 * @wbp.parser.entryPoint
+	 */
 	public JPanel onGetPanel_establ() {
 		Format format_int = NumberFormat.getIntegerInstance();
 		((NumberFormat)format_int).setGroupingUsed(false);
