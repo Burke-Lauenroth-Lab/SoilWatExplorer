@@ -28,7 +28,6 @@ import javax.swing.JMenu;
 import javax.swing.JSeparator;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class SWExplorer implements ActionListener, MenuListener{
 
@@ -223,7 +222,7 @@ public class SWExplorer implements ActionListener, MenuListener{
 		fc = new JFileChooser();
     	fc.setAcceptAllFileFilterUsed(false);
     	fc.setMultiSelectionEnabled(false);
-    	fc.setFileFilter(new FileNameExtensionFilter("files_v30", "in"));
+    	//fc.setFileFilter(new FileNameExtensionFilter("files_v30", "in"));
 		
 		initialize();
 	}
@@ -327,31 +326,39 @@ public class SWExplorer implements ActionListener, MenuListener{
 		Object src = (Object) e.getSource();
 		if(src == mntm_new) {
 			String prjName = JOptionPane.showInputDialog("Project Name:");
-			if(titles.contains(prjName)) {
-				JOptionPane.showMessageDialog(null, "Project Name Already Taken","Alert", JOptionPane.ERROR_MESSAGE);
-			} else {
-				if(prjName != "") {
-					titles.add(prjName);
-					addProject(prjName, false, "");
+			if(prjName != null) {
+				if(titles.contains(prjName)) {
+					JOptionPane.showMessageDialog(null, "Project Name Already Taken","Alert", JOptionPane.ERROR_MESSAGE);
+				} else {
+					if(prjName != "") {
+						titles.add(prjName);
+						addProject(prjName, false, "");
+					}
 				}
 			}
 		}
 		if(src == mntm_newDefault) {
 			String prjName = JOptionPane.showInputDialog("Project Name:");
-			if(titles.contains(prjName)) {
-				JOptionPane.showMessageDialog(null, "Project Name Already Taken","Alert", JOptionPane.ERROR_MESSAGE);
-			} else {
-				if(prjName != "") {
-					titles.add(prjName);
-					addProject(prjName, true, "");
+			if(prjName != null) {
+				if(titles.contains(prjName)) {
+					JOptionPane.showMessageDialog(null, "Project Name Already Taken","Alert", JOptionPane.ERROR_MESSAGE);
+				} else {
+					if(prjName != "") {
+						titles.add(prjName);
+						addProject(prjName, true, "");
+					}
 				}
+			} else {
+				
 			}
 		}
 		if(src == mntm_open) {
+			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 			int returnVal = fc.showOpenDialog(null);
 
 	        if (returnVal == JFileChooser.APPROVE_OPTION) {
 	        	file = fc.getSelectedFile().toPath();
+	        	file = file.resolve("files_v30.in");
 	        	String prjName;
 	        	if(file.getNameCount()>=2) {
 	        		prjName = file.getName(file.getNameCount()-2).toString();

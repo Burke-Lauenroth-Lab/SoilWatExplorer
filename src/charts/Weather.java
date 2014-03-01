@@ -2,6 +2,7 @@ package charts;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -218,7 +219,7 @@ public class Weather extends JFrame implements ActionListener, ItemListener {
 		
 		jpanel.add(panel_graph_daily);
 		jpanel.add(panel_graph_mean);
-		//jpanel.setPreferredSize( new Dimension(500,440));
+		jpanel.setPreferredSize( new Dimension(1250,975));
 		setContentPane(jpanel);
 		
 		onCalcMAT();
@@ -454,15 +455,43 @@ public class Weather extends JFrame implements ActionListener, ItemListener {
 		if(src == comboBox_daily_year) {
 			if(e.getStateChange() == ItemEvent.SELECTED) {
 				this.year = ((Integer)comboBox_daily_year.getSelectedItem()).intValue();
-				jpanel.remove(daily_temp);
-				jpanel.remove(daily_ppt);
+				panel_graph_daily.remove(daily_temp);
+				panel_graph_daily.remove(daily_ppt);
 				daily_temp = createWeatherTempPanel();
 				daily_ppt = createWeatherPPTPanel();
-				jpanel.add(daily_temp);
-				jpanel.add(daily_ppt);
-				this.revalidate();
+				panel_graph_daily.add(daily_temp);
+				panel_graph_daily.add(daily_ppt);
+				panel_graph_daily.revalidate();
 			}
 		}
 		
+		if(src == comboBox_mean_monthly_start) {
+			if(e.getStateChange() == ItemEvent.SELECTED) {
+				if(comboBox_mean_monthly_start.getSelectedIndex() > comboBox_mean_monthly_stop.getSelectedIndex()) {
+					comboBox_mean_monthly_start.setSelectedIndex(comboBox_mean_monthly_stop.getSelectedIndex());
+				}
+				panel_graph_mean.remove(mean_temp);
+				panel_graph_mean.remove(mean_ppt);
+				mean_temp = createWeather_meanMonthly_Temp();
+				mean_ppt = createWeather_meanMonthly_PPT();
+				panel_graph_mean.add(mean_temp);
+				panel_graph_mean.add(mean_ppt);
+				panel_graph_mean.revalidate();
+			}
+		}
+		if(src == comboBox_mean_monthly_stop) {
+			if(e.getStateChange() == ItemEvent.SELECTED) {
+				if(comboBox_mean_monthly_stop.getSelectedIndex() < comboBox_mean_monthly_start.getSelectedIndex()) {
+					comboBox_mean_monthly_stop.setSelectedIndex(comboBox_mean_monthly_start.getSelectedIndex());
+				}
+				panel_graph_mean.remove(mean_temp);
+				panel_graph_mean.remove(mean_ppt);
+				mean_temp = createWeather_meanMonthly_Temp();
+				mean_ppt = createWeather_meanMonthly_PPT();
+				panel_graph_mean.add(mean_temp);
+				panel_graph_mean.add(mean_ppt);
+				panel_graph_mean.revalidate();
+			}
+		}
 	}
 }

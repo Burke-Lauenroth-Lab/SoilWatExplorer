@@ -24,6 +24,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
+import charts.Map;
 import charts.Weather;
 
 import com.jgoodies.forms.factories.FormFactory;
@@ -356,6 +357,17 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 		
 		JPanel panel_source = new JPanel();
 		panel_weather_WeatherYears.add(panel_source, BorderLayout.CENTER);
+		
+		JButton btnMap = new JButton("Map");
+		btnMap.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Map m = new Map("SWeather Plot");
+				m.pack();
+				m.setVisible(true);
+			}
+		});
+		panel_source.add(btnMap);
 				
 		table_weather_History = new JTable();
 		table_weather_History.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
