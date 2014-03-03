@@ -5,13 +5,25 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.DirectoryStream.Filter;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.Format;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -32,7 +44,19 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
-public class WEATHER implements ListSelectionListener, ActionListener{
+import javax.swing.JComboBox;
+
+import org.openstreetmap.gui.jmapviewer.SiteEvent;
+
+public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent {
+	
+	private static class DirectoriesFilter implements Filter<Path> {
+	    @Override
+	    public boolean accept(Path entry) throws IOException {
+	        return Files.isDirectory(entry);
+	    }
+	}
+	
 	private soilwat.SW_WEATHER.WEATHER_INPUT_DATA weatherSetupIn;
 	private soilwat.SW_WEATHER_HISTORY weatherHist;
 	
@@ -47,15 +71,30 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 	private JCheckBox chckbx_weather_useMarkov;
 	private JFormattedTextField formattedTextField_days_in_runavg;
 	private JFormattedTextField formattedTextField_insertYear;
+	private List<String> weatherFolders = new ArrayList<String>();
+	private Path lookupWeatherFolder_Path = Paths.get("");
+	private Path lookupWeatherFolder_FolderPath = Paths.get("");
+	private Path folderPath = Paths.get("");
+	private JButton btnMap;
+	private JButton btn_lookupWeatherFolder;
+	private JComboBox<Integer> comboBox_lookup_start;
+	private JComboBox<Integer> comboBox_lookup_stop;
+	private JButton btn_lookup_load;
+	private JButton btnNewButton_folder_select;
+	private JComboBox<Integer> comboBox_folder_start;
+	private JComboBox<Integer> comboBox_folder_end;
+	private JButton btn_folder_load;
+	private String weatherPrefix;
 	
 	JButton btn_weather_historyAdd;
 	JButton btn_weather_historyRemove;
 	
 	private int list_index=-1;
 	
-	public WEATHER(soilwat.SW_WEATHER.WEATHER_INPUT_DATA weatherSetupIn, soilwat.SW_WEATHER_HISTORY weatherHist) {
+	public WEATHER(soilwat.SW_WEATHER.WEATHER_INPUT_DATA weatherSetupIn, soilwat.SW_WEATHER_HISTORY weatherHist, soilwat.SW_FILES.FILES_INPUT_DATA data) {
 		this.weatherHist = weatherHist;
 		this.weatherSetupIn = weatherSetupIn;
+		weatherPrefix = data.WeatherPathAndPrefix;
 	}
 	
 	public void onGetValues() {
@@ -292,7 +331,7 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 		lbl_weather_rH.setFont(new Font("Dialog", Font.PLAIN, 12));
 		panel_weather_monthlyScaleParam.add(lbl_weather_rH);
 		
-		JLabel lbl_weather_transmissivity = new JLabel("Transmissivity = multiplicative for mean monthly relative transmissivity; min(1, max(0, scale * transmissivity))");
+		JLabel lbl_weather_transmissivity = new JLabel("Transmissivity = multiplicative for mean month rel transmis; min(1, max(0, scale * transmissivity))");
 		lbl_weather_transmissivity.setFont(new Font("Dialog", Font.PLAIN, 12));
 		panel_weather_monthlyScaleParam.add(lbl_weather_transmissivity);
 		panel_weather_monthlyScaleParam.add(table_weather_monthlyScalingParam);
@@ -332,10 +371,11 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 		panel_weather_list_control.add(btn_weather_historyAdd);
 		
 		JLabel lbl_weather_addYear = new JLabel("Year:");
+		lbl_weather_addYear.setFont(new Font("Dialog", Font.PLAIN, 12));
 		panel_weather_list_control.add(lbl_weather_addYear);
 		
 		formattedTextField_insertYear = new JFormattedTextField(format_int);
-		formattedTextField_insertYear.setColumns(5);
+		formattedTextField_insertYear.setColumns(4);
 		Integer year = null;
 		if(this.weatherHist.data())
 			year = new Integer(Collections.max(this.weatherHist.getHistYearsInteger())+1);
@@ -345,6 +385,7 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 		panel_weather_list_control.add(formattedTextField_insertYear);
 		
 		JButton plot = new JButton("Graph");
+		plot.setFont(new Font("Dialog", Font.PLAIN, 12));
 		plot.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -357,17 +398,289 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 		
 		JPanel panel_source = new JPanel();
 		panel_weather_WeatherYears.add(panel_source, BorderLayout.CENTER);
+		panel_source.setLayout(new BoxLayout(panel_source, BoxLayout.PAGE_AXIS));
 		
-		JButton btnMap = new JButton("Map");
+		JLabel lblNewLabel = new JLabel("Weather data from LookupWeatherFolder");
+		lblNewLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		panel_source.add(lblNewLabel);
+		
+		JPanel panel_lookupweatherfolder = new JPanel();
+		panel_source.add(panel_lookupweatherfolder);
+		panel_lookupweatherfolder.setLayout(new BoxLayout(panel_lookupweatherfolder, BoxLayout.PAGE_AXIS));
+		
+		JPanel panel_step_1 = new JPanel();
+		panel_lookupweatherfolder.add(panel_step_1);
+		
+		JLabel lblSelectFolder = new JLabel("1. Select");
+		lblSelectFolder.setFont(new Font("Dialog", Font.PLAIN, 12));
+		panel_step_1.add(lblSelectFolder);
+		
+		btn_lookupWeatherFolder = new JButton("LookupWeatherFolder");
+		btn_lookupWeatherFolder.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				btnMap.setEnabled(false);
+				JFileChooser fc;
+				fc = new JFileChooser();
+		    	fc.setAcceptAllFileFilterUsed(false);
+		    	fc.setMultiSelectionEnabled(false);
+		    	fc.setSelectedFile(new File("/media/ryan/Storage/Users/Ryan_Murphy/My_Documents/Work/LookupWeatherFolder/"));
+		    	fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				int returnVal = fc.showOpenDialog(null);
+
+		        if (returnVal == JFileChooser.APPROVE_OPTION) {
+		        	lookupWeatherFolder_Path = fc.getSelectedFile().toPath();
+		        	try (DirectoryStream<Path> ds = Files.newDirectoryStream(FileSystems.getDefault().getPath(lookupWeatherFolder_Path.toString()), new DirectoriesFilter())) {
+		        		for (Path p : ds) {
+		        			if(p.getFileName().toString().startsWith("Weather_NCEPCFSR_")) {
+		        				weatherFolders.add(p.getFileName().toString());
+		        			}
+		        		}
+		        	} catch (IOException eio) {
+		        		eio.printStackTrace();
+		        	}
+		        	if(weatherFolders.get(0).startsWith("Weather_NCEPCFSR_") && weatherFolders.size() > 0) {
+		        		btnMap.setEnabled(true);
+		        	} else {
+		        		JOptionPane.showMessageDialog(null, "Folder does not contain any NCEPCFSR data.","Alert", JOptionPane.ERROR_MESSAGE);
+		        	}
+		        } else {
+		        	
+		        }
+			}
+		});
+		panel_step_1.add(btn_lookupWeatherFolder);
+		btn_lookupWeatherFolder.setFont(new Font("Dialog", Font.PLAIN, 12));
+		
+		JLabel lblNewLabel_1 = new JLabel("2. Site");
+		lblNewLabel_1.setFont(new Font("Dialog", Font.PLAIN, 12));
+		panel_step_1.add(lblNewLabel_1);
+		
+		
+		btnMap = new JButton("Map");
+		panel_step_1.add(btnMap);
+		btnMap.setFont(new Font("Dialog", Font.PLAIN, 12));
 		btnMap.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				Map m = new Map("SWeather Plot");
-				m.pack();
 				m.setVisible(true);
+				m.onSetMapMarkers(weatherFolders);
+				int result = JOptionPane.showConfirmDialog(m, m.get_MapPanel(), "Select Weather Folder by lat/long", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE);
+				List<Integer> temp_years = new ArrayList<Integer>();
+				Integer[] years = null;
+				
+				if(result == JOptionPane.YES_OPTION) {
+					String folder = m.getFolder()+"/";
+					btn_lookup_load.setEnabled(false);
+					lookupWeatherFolder_FolderPath = lookupWeatherFolder_Path.resolve(folder);
+					String Prefix = Paths.get(weatherPrefix).getFileName().toString();
+					try ( DirectoryStream<Path> ds = Files.newDirectoryStream(FileSystems.getDefault().getPath(lookupWeatherFolder_FolderPath.toString())) ) {
+		        		for (Path p : ds) {
+		        			if(p.getFileName().toString().startsWith(Prefix)) {
+		        				temp_years.add(Integer.parseInt(p.getFileName().toString().split("\\.", 2)[1]));
+		        			}
+		        		}
+		        		if(temp_years.size() > 0) {
+		        			years = new Integer[temp_years.size()];
+		        			Collections.sort(temp_years);
+		        			temp_years.toArray(years);
+		        		} else {
+		        			JOptionPane.showMessageDialog(null, "No Weather Data in this folder.","Alert", JOptionPane.ERROR_MESSAGE);
+		        		}
+		        	} catch (IOException eio) {
+		        		eio.printStackTrace();
+		        		JOptionPane.showMessageDialog(null, "Folder does not contain any NCEPCFSR data.","Alert", JOptionPane.ERROR_MESSAGE);
+		        	}
+					if(years != null) {
+						comboBox_lookup_start.setEnabled(true);
+						comboBox_lookup_stop.setEnabled(true);
+						comboBox_lookup_start.setModel(new DefaultComboBoxModel<Integer>(years));
+						comboBox_lookup_start.setSelectedIndex(0);
+						comboBox_lookup_stop.setModel(new DefaultComboBoxModel<Integer>(years));
+						comboBox_lookup_stop.setSelectedIndex(temp_years.size()-1);
+						btn_lookup_load.setEnabled(true);
+					}
+				} else {
+					
+				}
 			}
 		});
-		panel_source.add(btnMap);
+		btnMap.setEnabled(false);
+		
+		JPanel panel_step_2 = new JPanel();
+		panel_lookupweatherfolder.add(panel_step_2);
+		
+		JLabel lblNewLabel_2 = new JLabel("3. Year Range");
+		lblNewLabel_2.setFont(new Font("Dialog", Font.PLAIN, 12));
+		panel_step_2.add(lblNewLabel_2);
+		
+		comboBox_lookup_start = new JComboBox<Integer>();
+		comboBox_lookup_start.setEnabled(false);
+		comboBox_lookup_start.setFont(new Font("Dialog", Font.PLAIN, 12));
+		panel_step_2.add(comboBox_lookup_start);
+		
+		JLabel lblNewLabel_3 = new JLabel(":");
+		panel_step_2.add(lblNewLabel_3);
+		
+		comboBox_lookup_stop = new JComboBox<Integer>();
+		comboBox_lookup_stop.setEnabled(false);
+		comboBox_lookup_stop.setFont(new Font("Dialog", Font.PLAIN, 12));
+		panel_step_2.add(comboBox_lookup_stop);
+		
+		JLabel lblNewLabel_4 = new JLabel("4. ");
+		lblNewLabel_4.setFont(new Font("Dialog", Font.PLAIN, 12));
+		panel_step_2.add(lblNewLabel_4);
+		
+		btn_lookup_load = new JButton("Load");
+		btn_lookup_load.setEnabled(false);
+		btn_lookup_load.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String prefix = Paths.get(weatherPrefix).getFileName().toString();
+				int startYear = ((Number)comboBox_lookup_start.getSelectedItem()).intValue();
+				int stopYear = ((Number)comboBox_lookup_stop.getSelectedItem()).intValue();
+				try {
+					weatherHist.onRead(lookupWeatherFolder_FolderPath, prefix, startYear, stopYear);
+					onReset_list();
+				} catch (Exception e1) {
+					JOptionPane.showMessageDialog(null, "FAILED TO READ: "+e.toString(),"ERROR", JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		});
+		btn_lookup_load.setFont(new Font("Dialog", Font.PLAIN, 12));
+		panel_step_2.add(btn_lookup_load);
+		
+		JLabel lblNewLabel_5 = new JLabel("Weather Data form Folder");
+		lblNewLabel_5.setAlignmentX(Component.CENTER_ALIGNMENT);
+		panel_source.add(lblNewLabel_5);
+		
+		JPanel panel_folder = new JPanel();
+		panel_source.add(panel_folder);
+		panel_folder.setLayout(new BoxLayout(panel_folder, BoxLayout.PAGE_AXIS));
+		
+		JPanel panel_1 = new JPanel();
+		panel_folder.add(panel_1);
+		
+		JLabel lblNewLabel_6 = new JLabel("1. ");
+		lblNewLabel_6.setFont(new Font("Dialog", Font.PLAIN, 12));
+		panel_1.add(lblNewLabel_6);
+		
+		btnNewButton_folder_select = new JButton("Folder");
+		btnNewButton_folder_select.setFont(new Font("Dialog", Font.PLAIN, 12));
+		btnNewButton_folder_select.addActionListener(new ActionListener() {@Override
+		public void actionPerformed(ActionEvent e) {
+			btnMap.setEnabled(false);
+			JFileChooser fc;
+			fc = new JFileChooser();
+	    	fc.setAcceptAllFileFilterUsed(false);
+	    	fc.setMultiSelectionEnabled(false);
+	    	fc.setSelectedFile(new File("/home/ryan/workspace/Rsoilwat_v31/tests/"));
+	    	fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			int returnVal = fc.showOpenDialog(null);
+			List<Integer> temp_years = new ArrayList<Integer>();
+			Integer[] years = null;
+			
+	        if (returnVal == JFileChooser.APPROVE_OPTION) {
+	        	btn_folder_load.setEnabled(false);
+	        	folderPath = fc.getSelectedFile().toPath();
+	        	String Prefix = Paths.get(weatherPrefix).getFileName().toString();
+				try ( DirectoryStream<Path> ds = Files.newDirectoryStream(FileSystems.getDefault().getPath(folderPath.toString())) ) {
+	        		for (Path p : ds) {
+	        			if(p.getFileName().toString().startsWith(Prefix)) {
+	        				temp_years.add(Integer.parseInt(p.getFileName().toString().split("\\.", 2)[1]));
+	        			}
+	        		}
+	        		if(temp_years.size() > 0) {
+	        			years = new Integer[temp_years.size()];
+	        			Collections.sort(temp_years);
+	        			temp_years.toArray(years);
+	        		} else {
+	        			JOptionPane.showMessageDialog(null, "No Weather Data in this folder.","Alert", JOptionPane.ERROR_MESSAGE);
+	        		}
+	        	} catch (IOException eio) {
+	        		eio.printStackTrace();
+	        		JOptionPane.showMessageDialog(null, "Folder does not contain any NCEPCFSR data.","Alert", JOptionPane.ERROR_MESSAGE);
+	        	}
+				if(years != null) {
+					comboBox_folder_start.setEnabled(true);
+					comboBox_folder_end.setEnabled(true);
+					comboBox_folder_start.setModel(new DefaultComboBoxModel<Integer>(years));
+					comboBox_folder_start.setSelectedIndex(0);
+					comboBox_folder_end.setModel(new DefaultComboBoxModel<Integer>(years));
+					comboBox_folder_end.setSelectedIndex(temp_years.size()-1);
+					btn_folder_load.setEnabled(true);
+				}
+	        } else {
+	        	
+	        }
+		}
+		});	
+		panel_1.add(btnNewButton_folder_select);
+		
+		JLabel lblNewLabel_7 = new JLabel("2. Range");
+		lblNewLabel_7.setFont(new Font("Dialog", Font.PLAIN, 12));
+		panel_1.add(lblNewLabel_7);
+		
+		comboBox_folder_start = new JComboBox<Integer>();
+		comboBox_folder_start.setEnabled(false);
+		comboBox_folder_start.setFont(new Font("Dialog", Font.PLAIN, 12));
+		panel_1.add(comboBox_folder_start);
+		
+		JLabel lblNewLabel_8 = new JLabel(":");
+		panel_1.add(lblNewLabel_8);
+		
+		comboBox_folder_end = new JComboBox<Integer>();
+		comboBox_folder_end.setEnabled(false);
+		comboBox_folder_end.setFont(new Font("Dialog", Font.PLAIN, 12));
+		panel_1.add(comboBox_folder_end);
+		
+		JLabel lblNewLabel_9 = new JLabel("3.");
+		lblNewLabel_9.setFont(new Font("Dialog", Font.PLAIN, 12));
+		panel_1.add(lblNewLabel_9);
+		
+		btn_folder_load = new JButton("Load");
+		btn_folder_load.setEnabled(false);
+		btn_folder_load.setFont(new Font("Dialog", Font.PLAIN, 12));
+		panel_1.add(btn_folder_load);
+		
+		JLabel lblNewLabel_10 = new JLabel("Weather Data from Database");
+		lblNewLabel_10.setAlignmentX(Component.CENTER_ALIGNMENT);
+		panel_source.add(lblNewLabel_10);
+		
+		JPanel panel_db = new JPanel();
+		panel_source.add(panel_db);
+		
+		JLabel lblNewLabel_11 = new JLabel("1. Weather Data Extracter Tool:");
+		lblNewLabel_11.setFont(new Font("Dialog", Font.PLAIN, 12));
+		panel_db.add(lblNewLabel_11);
+		
+		JButton btn_database_tool = new JButton("DB TOOL");
+		btn_database_tool.setFont(new Font("Dialog", Font.PLAIN, 12));
+		btn_database_tool.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				JFileChooser fc;
+				fc = new JFileChooser();
+		    	fc.setAcceptAllFileFilterUsed(false);
+		    	fc.setMultiSelectionEnabled(false);
+		    	fc.setSelectedFile(new File("/media/ryan/Storage/Users/Ryan_Murphy/My_Documents/Work/dbWeatherData.sqlite"));
+		    	fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				int returnVal = fc.showOpenDialog(null);
+				
+		        if (returnVal == JFileChooser.APPROVE_OPTION) {
+		        	Path weatherDB = fc.getSelectedFile().toPath();
+		        	DatabaseWeatherSelector dbWeatherTool = new DatabaseWeatherSelector(weatherDB, weatherHist);
+		        	dbWeatherTool.addSiteEventListener(getInstance());
+		        	dbWeatherTool.pack();
+		        	dbWeatherTool.setVisible(true);
+		        } else {
+		        	
+		        }
+				
+			}
+		});
+		panel_db.add(btn_database_tool);
 				
 		table_weather_History = new JTable();
 		table_weather_History.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -378,6 +691,9 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 		panel_weather.add(new JScrollPane(table_weather_History));
 		
 		return panel_weather;
+	}
+	private WEATHER getInstance() {
+		return this;
 	}
 
 	@Override
@@ -424,6 +740,11 @@ public class WEATHER implements ListSelectionListener, ActionListener{
 			//this.weatherHist.setCurrentYear(Integer.parseInt(list_historyYears.getSelectedValue()));
 			onSet_HIST();
 		}
+	}
+	
+	@Override
+	public void siteSelected(int Site) {
+		onReset_list();
 	}
 	
 	private DefaultTableModel getModel(int days) {

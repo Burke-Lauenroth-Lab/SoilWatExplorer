@@ -75,7 +75,7 @@ public class SWExplorer implements ActionListener, MenuListener{
 			prod = new PROD(inputData.prodIn);
 			estab = new ESTABL(inputData.estabIn);
 			cloud = new CLOUD(inputData.cloudIn);
-			weather = new WEATHER(inputData.weatherSetupIn, inputData.weatherHist);
+			weather = new WEATHER(inputData.weatherSetupIn, inputData.weatherHist, inputData.filesIn);
 			swc = new SWC(inputData.swcSetupIn, inputData.swcHist);
 			out = new OUTPUT(inputData.outputSetupIn);
 		}

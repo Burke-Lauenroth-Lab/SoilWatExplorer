@@ -35,6 +35,10 @@ import javax.swing.JFormattedTextField;
 import javax.swing.BoxLayout;
 import javax.swing.JOptionPane;
 
+import java.awt.Font;
+import java.text.Format;
+import java.text.NumberFormat;
+
 public class Weather extends JFrame implements ActionListener, ItemListener {
 	
 	/**
@@ -65,12 +69,17 @@ public class Weather extends JFrame implements ActionListener, ItemListener {
 	private JComboBox<Integer> comboBox_mean_monthly_start;
 	private JComboBox<Integer> comboBox_mean_monthly_stop;
 
+	public Weather() {
+	}
+	
 	public Weather(String applicationTitle, String chartTitle, soilwat.SW_WEATHER_HISTORY hist, int year) {
 		super(applicationTitle);
 		
 		this.hist = hist;
 		this.year = year;
 		
+		Format format_double = NumberFormat.getNumberInstance();
+		((NumberFormat)format_double).setGroupingUsed(false);
 		
 		Integer[] years = new Integer[this.hist.get_nYears()];
 		this.hist.getHistYearsInteger().toArray(years);
@@ -89,7 +98,8 @@ public class Weather extends JFrame implements ActionListener, ItemListener {
 		JLabel lbl_mat_c = new JLabel("Mean Annual Temperature in Celsius :");
 		panel_mat.add(lbl_mat_c);
 		
-		formattedTextField_mat = new JFormattedTextField();
+		formattedTextField_mat = new JFormattedTextField(format_double);
+		formattedTextField_mat.setFont(new Font("Dialog", Font.PLAIN, 12));
 		formattedTextField_mat.setColumns(5);
 		panel_mat.add(formattedTextField_mat);
 		
@@ -130,7 +140,7 @@ public class Weather extends JFrame implements ActionListener, ItemListener {
 		JLabel lbl_map_cm = new JLabel("Mean Annual Precipitation in cm:          ");
 		panel_map_cm.add(lbl_map_cm);
 		
-		formattedTextField_map = new JFormattedTextField();
+		formattedTextField_map = new JFormattedTextField(format_double);
 		formattedTextField_map.setColumns(5);
 		panel_map_cm.add(formattedTextField_map);
 		
@@ -219,7 +229,7 @@ public class Weather extends JFrame implements ActionListener, ItemListener {
 		
 		jpanel.add(panel_graph_daily);
 		jpanel.add(panel_graph_mean);
-		jpanel.setPreferredSize( new Dimension(1250,975));
+		jpanel.setPreferredSize( new Dimension(1350,975));
 		setContentPane(jpanel);
 		
 		onCalcMAT();
@@ -321,6 +331,26 @@ public class Weather extends JFrame implements ActionListener, ItemListener {
 		return xyseriescollection;
 	}
 	
+	//for database
+	private XYDataset createDataset_meanMonthly_Temp(double[] values, int Site_id) {
+		XYSeries xyseries = new XYSeries("Mean Monthly Temp for Site: "+String.valueOf(Site_id));
+		for(int i=0; i<12; i++) {
+			xyseries.add(i+1, values[i]);
+		}
+		XYSeriesCollection xyseriescollection = new XYSeriesCollection();
+		xyseriescollection.addSeries(xyseries);
+		return xyseriescollection;
+	}
+	private XYDataset createDataset_meanMonthly_PPT(double[] values, int Site_id) {
+		XYSeries xyseries = new XYSeries("Mean Monthly PPT for Site: "+String.valueOf(Site_id));
+		for(int i=0; i<12; i++) {
+			xyseries.add(i+1, values[i]);
+		}
+		XYSeriesCollection xyseriescollection = new XYSeriesCollection();
+		xyseriescollection.addSeries(xyseries);
+		return xyseriescollection;
+	}
+	
 	private JFreeChart createChartTEMP(XYDataset dataset, String title) {
         JFreeChart chart = ChartFactory.createTimeSeriesChart(title, "Date", "Temp (C)", dataset);
         chart.setBackgroundPaint(Color.white);
@@ -388,6 +418,13 @@ public class Weather extends JFrame implements ActionListener, ItemListener {
 		int stop = ((Integer)comboBox_mean_monthly_stop.getSelectedItem()).intValue();
 		JFreeChart jfreechart = createChart(createDataset_meanMonthly_PPT(), "Mean Monthly Precipitation "+String.valueOf(strt)+":"+String.valueOf(stop), "PPT (cm)");
 		return new ChartPanel(jfreechart);
+	}
+	//database//
+	public JPanel create_DatabasePanel(double[] temp, double[] ppt, int Site_id) {
+		JPanel panel_tempPPT = new JPanel();
+		panel_tempPPT.add(new ChartPanel(createChart(createDataset_meanMonthly_Temp(temp, Site_id), "Mean Monthly Temperature for Site: "+String.valueOf(Site_id), "TEMP (C)")));
+		panel_tempPPT.add(new ChartPanel(createChart(createDataset_meanMonthly_PPT(ppt, Site_id), "Mean Monthly Precipitation for Site: "+String.valueOf(Site_id), "PPT (cm)")));
+		return panel_tempPPT;
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
