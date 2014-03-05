@@ -28,14 +28,19 @@ import java.awt.Dimension;
 
 import javax.swing.JTable;
 
+import charts.ChartSelector;
+
 import java.awt.BorderLayout;
 
 public class OUTDATA extends JPanel implements ListSelectionListener, ItemListener {
 	
 	protected PeriodEvent periodEvent;
-
-	public void addSiteEventListener(PeriodEvent e) {
+	protected KeyEvent keyEvent;
+	public void addPeriodEventListener(PeriodEvent e) {
 		periodEvent = e;
+	}
+	public void addKeyEventListener(KeyEvent e) {
+		keyEvent = e;
 	}
 	
 	public final class ScrollingTableFix implements ComponentListener {
@@ -103,6 +108,7 @@ public class OUTDATA extends JPanel implements ListSelectionListener, ItemListen
 	private boolean usePeriodColumn = true;
 	
 	private JTable table_data;
+	private ChartSelector panel_chart;
 	
 	public OUTDATA(SW_CONTROL control, soilwat.InputData.OutputIn out) {
 		this.out = out;
@@ -162,14 +168,22 @@ public class OUTDATA extends JPanel implements ListSelectionListener, ItemListen
 		scrollPane_2.addComponentListener(new ScrollingTableFix(table_data, scrollPane_2));
 		panel_center.add(scrollPane_2);
 		
+		OutKey key = list_outData_KeySelect.getSelectedValue().mykey;
+		OutPeriod period = (SW_OUTPUT.OutPeriod)comboBox_periodSelector.getSelectedItem();
+		panel_chart = new ChartSelector(control, period, key);
+		add(panel_chart);
 		//listeners
 		list_outData_KeySelect.addListSelectionListener(this);
 		comboBox_periodSelector.addItemListener(this);
+		this.addPeriodEventListener(this.panel_chart);
+		this.addKeyEventListener(this.panel_chart);
+		
 	}
 	
 	private void onSetTable() {
 		OutKey key = list_outData_KeySelect.getSelectedValue().mykey;
 		OutPeriod period = (SW_OUTPUT.OutPeriod)comboBox_periodSelector.getSelectedItem();
+		
 		int rows = control.onGet_Timing().get_nRows(period);
 		int columns = control.onGet_Timing().get_nColumns(period);
 		columns+=control.onGet_nColumns(key);
@@ -214,6 +228,11 @@ public class OUTDATA extends JPanel implements ListSelectionListener, ItemListen
 			}
 			//2. Update the table
 			onSetTable();
+			//3. Notify listeners
+			keyEvent.keyChange(key);
+			panel_chart.revalidate();
+			this.revalidate();
+			this.repaint();
 		}
 	}
 
@@ -223,6 +242,9 @@ public class OUTDATA extends JPanel implements ListSelectionListener, ItemListen
 		if(src==comboBox_periodSelector) {
 			onSetTable();
 			periodEvent.periodChange((SW_OUTPUT.OutPeriod)comboBox_periodSelector.getSelectedItem());
+			panel_chart.revalidate();
+			this.revalidate();
+			this.repaint();
 		}
 	}	
 }

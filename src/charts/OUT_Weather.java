@@ -22,17 +22,19 @@ import org.jfree.data.xy.YIntervalSeriesCollection;
 import org.jfree.ui.RectangleInsets;
 
 import soilwat.SW_CONTROL;
-import soilwat.SW_OUTPUT;
 import soilwat.SW_OUTPUT.OutKey;
 import soilwat.SW_OUTPUT.OutPeriod;
 
-public class OUT_weather extends OutputChart {
+public class OUT_Weather extends OutputChart {
 	private static final long serialVersionUID = 1L;
+	private JPanel chart;
 
-	public OUT_weather(SW_OUTPUT.SW_OUT_TIME time, SW_CONTROL control, OutPeriod p){
-		super(control, time, p);
+	public OUT_Weather(SW_CONTROL control, OutPeriod p){
+		super(control, control.onGet_Timing(), p);
 		this.key = OutKey.eSW_Temp;
 		this.data = control.onGetOutput(key, p);
+		chart = createWeatherTempPanel();
+		this.add(chart);
 	}
 	
 	private XYDataset createDatasetTemp() {
@@ -43,8 +45,9 @@ public class OUT_weather extends OutputChart {
         
         switch (this.period) {
 		case SW_DAY:
-			obj = new Day(soilwat.Times.doy2mday(time.days[0][1]),soilwat.Times.doy2month(time.days[0][1]),time.days[0][0]);
-			
+			int dayOfMonth = soilwat.Times.doy2mday(time.days[0][1]);
+			int monthOfYear = soilwat.Times.doy2month(time.days[0][1])+1;
+			obj = new Day(dayOfMonth,monthOfYear,time.days[0][0]);
 		break;
 		case SW_WEEK:
 			obj = new Week(time.weeks[0][1],time.weeks[0][0]);
@@ -96,7 +99,9 @@ public class OUT_weather extends OutputChart {
 
 	@Override
 	void updateChart() {
-		// TODO Auto-generated method stub
-		
+		this.remove(chart);
+		chart = createWeatherTempPanel();
+		this.add(chart);
+		this.revalidate();
 	}
 }
