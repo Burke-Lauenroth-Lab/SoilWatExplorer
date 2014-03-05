@@ -1,6 +1,8 @@
 package explorer;
 
+import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Toolkit;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -218,13 +220,16 @@ public class SWExplorer implements ActionListener, MenuListener{
 		//projects = new ArrayList<SWExplorer.SoilWat>();
 		nameToProject = new TreeMap<String,SoilWat>();
 		titles = new ArrayList<String>();
-		
+				
 		fc = new JFileChooser();
     	fc.setAcceptAllFileFilterUsed(false);
     	fc.setMultiSelectionEnabled(false);
     	//fc.setFileFilter(new FileNameExtensionFilter("files_v30", "in"));
 		
 		initialize();
+		
+		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+		frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
 	}
 	
 	/**
@@ -353,12 +358,12 @@ public class SWExplorer implements ActionListener, MenuListener{
 			}
 		}
 		if(src == mntm_open) {
-			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			int returnVal = fc.showOpenDialog(null);
 
 	        if (returnVal == JFileChooser.APPROVE_OPTION) {
 	        	file = fc.getSelectedFile().toPath();
-	        	file = file.resolve("files_v30.in");
+	        	//file = file.resolve("files_v30.in");
 	        	String prjName;
 	        	if(file.getNameCount()>=2) {
 	        		prjName = file.getName(file.getNameCount()-2).toString();
@@ -436,11 +441,14 @@ public class SWExplorer implements ActionListener, MenuListener{
 			nameToProject.get(title).onVerify();
 		}
 		if(src==mntm_Run) {
-			//Save the project
 			String title = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
-			nameToProject.get(title).onSave(null);
 			
+			//Save the project
+			nameToProject.get(title).onSave(null);
 			nameToProject.get(title).onRun();
+			
+			OutputExplorer exp = new OutputExplorer();
+			exp.addOutput(nameToProject.get(title).control, nameToProject.get(title).inputData.outputSetupIn);
 		}
 		if(src==mntm_exit) {
 			System.exit(0);
