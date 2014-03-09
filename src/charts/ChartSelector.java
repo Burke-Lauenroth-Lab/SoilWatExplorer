@@ -1,5 +1,6 @@
 package charts;
 
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,6 +11,7 @@ import soilwat.SW_OUTPUT.OutKey;
 import soilwat.SW_OUTPUT.OutPeriod;
 import explorer.KeyEvent;
 import explorer.PeriodEvent;
+import java.awt.BorderLayout;
 
 public class ChartSelector extends JPanel implements PeriodEvent, KeyEvent {
 	private static final long serialVersionUID = 1L;
@@ -35,6 +37,15 @@ public class ChartSelector extends JPanel implements PeriodEvent, KeyEvent {
 	private OUT_Layers panel_LyrDrain;
 	private OUT_Layers panel_SoilTemp;
 	
+	private OUT_TypeLayer panel_TRANSP;
+	private OUT_TypeLayer panel_HYDRED;
+	
+	private OUT_MultipleSingle panel_Precip;
+	private OUT_MultipleSingle panel_Runoff;
+	private OUT_MultipleSingle panel_EvapSurface;
+	private OUT_MultipleSingle panel_Interception;
+	private OUT_MultipleSingle panel_SnowPack;
+	private OUT_MultipleSingle panel_Estab;
 	
 	private OutPeriod period;
 	private SW_CONTROL control;
@@ -42,9 +53,23 @@ public class ChartSelector extends JPanel implements PeriodEvent, KeyEvent {
 	public ChartSelector(SW_CONTROL control, OutPeriod period, OutKey key) {
 		this.control = control;
 		this.period = period;
+		setLayout(new BorderLayout(0, 0));
 		
 		panel_weather = new OUT_Weather(this.control, this.period);
 		this.addPeriodEventListener(panel_weather);
+		
+		panel_Precip = new OUT_MultipleSingle(this.control, OutKey.eSW_Precip, this.period);
+		this.addPeriodEventListener(panel_Precip);
+		panel_Runoff = new OUT_MultipleSingle(this.control, OutKey.eSW_Runoff, this.period);
+		this.addPeriodEventListener(panel_Runoff);
+		panel_EvapSurface = new OUT_MultipleSingle(this.control, OutKey.eSW_EvapSurface, this.period);
+		this.addPeriodEventListener(panel_EvapSurface);
+		panel_Interception = new OUT_MultipleSingle(this.control, OutKey.eSW_Interception, this.period);
+		this.addPeriodEventListener(panel_Interception);
+		panel_SnowPack = new OUT_MultipleSingle(this.control, OutKey.eSW_SnowPack, this.period);
+		this.addPeriodEventListener(panel_SnowPack);
+		panel_Estab = new OUT_MultipleSingle(this.control, OutKey.eSW_Estab, this.period);
+		this.addPeriodEventListener(panel_Estab);
 		
 		panel_SoilInf = new OUT_Single(this.control, OutKey.eSW_SoilInf, this.period);
 		this.addPeriodEventListener(panel_SoilInf);
@@ -78,6 +103,11 @@ public class ChartSelector extends JPanel implements PeriodEvent, KeyEvent {
 		panel_SoilTemp = new OUT_Layers(this.control, OutKey.eSW_SoilTemp, this.period);
 		this.addPeriodEventListener(panel_SoilTemp);
 		
+		panel_TRANSP = new OUT_TypeLayer(this.control, OutKey.eSW_Transp, this.period);
+		this.addPeriodEventListener(panel_TRANSP);
+		panel_HYDRED = new OUT_TypeLayer(this.control, OutKey.eSW_HydRed, this.period);
+		this.addPeriodEventListener(panel_HYDRED);
+		
 		keyChange(key);
 	}
 	
@@ -87,6 +117,7 @@ public class ChartSelector extends JPanel implements PeriodEvent, KeyEvent {
 	
 	private void setChart(OutputChart panel_chart) {
 		this.removeAll();
+		panel_chart.setAlignmentY(Component.TOP_ALIGNMENT);
 		add(panel_chart);
 		revalidate();
 	}
@@ -111,11 +142,13 @@ public class ChartSelector extends JPanel implements PeriodEvent, KeyEvent {
 			setChart(panel_weather);
 			break;
 		case eSW_Precip:
+			setChart(panel_Precip);
 			break;
 		case eSW_SoilInf:
 			setChart(panel_SoilInf);
 			break;
 		case eSW_Runoff:
+			setChart(panel_Runoff);
 			break;
 		case eSW_AllH2O:
 			break;
@@ -141,18 +174,22 @@ public class ChartSelector extends JPanel implements PeriodEvent, KeyEvent {
 			setChart(panel_SurfaceWater);
 			break;
 		case eSW_Transp:
+			setChart(panel_TRANSP);
 			break;
 		case eSW_EvapSoil:
 			setChart(panel_EvapSoil);
 			break;
 		case eSW_EvapSurface:
+			setChart(panel_EvapSurface);
 			break;
 		case eSW_Interception:
+			setChart(panel_Interception);
 			break;
 		case eSW_LyrDrain:
 			setChart(panel_LyrDrain);
 			break;
 		case eSW_HydRed:
+			setChart(panel_HYDRED);
 			break;
 		case eSW_ET:
 			break;
@@ -166,6 +203,7 @@ public class ChartSelector extends JPanel implements PeriodEvent, KeyEvent {
 			setChart(panel_WetDays);
 			break;
 		case eSW_SnowPack:
+			setChart(panel_SnowPack);
 			break;
 		case eSW_DeepSWC:
 			setChart(panel_DeepSWC);
@@ -176,6 +214,7 @@ public class ChartSelector extends JPanel implements PeriodEvent, KeyEvent {
 		case eSW_AllVeg:
 			break;
 		case eSW_Estab:
+			setChart(panel_Estab);
 			break;
 		case eSW_LastKey:
 			break;

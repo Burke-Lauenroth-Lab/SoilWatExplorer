@@ -1,5 +1,6 @@
 package explorer;
 
+import java.awt.Dimension;
 import java.awt.Font;
 
 import javax.swing.JLabel;
@@ -10,6 +11,12 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
+
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.BoxLayout;
+import javax.swing.JCheckBox;
 
 public class FILES {
 	
@@ -29,6 +36,9 @@ public class FILES {
 	private JTextField textField_swcSetupIn;
 	private JTextField textField_OutputFolder;
 	private JTextField textField_OutputSetupIn;
+	private JCheckBox checkBox_saveOutData;
+	protected JProgressBar progressBar;
+	protected JTextArea textArea_logFile;
 	
 	soilwat.SW_FILES.FILES_INPUT_DATA filesIn;
 	
@@ -74,8 +84,14 @@ public class FILES {
 		textField_OutputSetupIn.setText(this.filesIn.OutputSetupIn);
 	}
 	
-	public JPanel onGetPanel_files() {
+	/**
+	 * @wbp.parser.entryPoint
+	 */
+	public JPanel onGetPanel_files(JPanel model) {
+		JPanel files = new JPanel();
+		files.setLayout(new BoxLayout(files, BoxLayout.X_AXIS));
 		JPanel panel_files = new JPanel();
+		files.add(panel_files);
 		
 		panel_files.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.DEFAULT_COLSPEC,
@@ -277,6 +293,65 @@ public class FILES {
 		panel_files.add(textField_OutputSetupIn, "2, 45, left, default");
 		textField_OutputSetupIn.setColumns(30);
 		
-		return panel_files;
+		JPanel panel_settings = new JPanel();
+		files.add(panel_settings);
+		panel_settings.setLayout(new BoxLayout(panel_settings, BoxLayout.PAGE_AXIS));
+		
+		panel_settings.add(model);
+		
+		JPanel panel_runStatus = new JPanel();
+		panel_settings.add(panel_runStatus);
+		panel_runStatus.setLayout(new FormLayout(new ColumnSpec[] {
+				FormFactory.DEFAULT_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,},
+			new RowSpec[] {
+				FormFactory.LINE_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.LINE_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,}));
+		
+		JLabel lblModelRunInformation = new JLabel("Model Run Information and Settings");
+		panel_runStatus.add(lblModelRunInformation, "1, 2, 2, 1, center, default");
+		
+		JLabel lblProgress = new JLabel("Progress:");
+		lblProgress.setFont(new Font("Dialog", Font.PLAIN, 12));
+		panel_runStatus.add(lblProgress, "1, 4, right, default");
+		
+		progressBar = new JProgressBar();
+		progressBar.setPreferredSize(new Dimension(250,20));
+		panel_runStatus.add(progressBar, "2, 4, left, top");
+		
+		JLabel lblWriteFiles = new JLabel("Write Files:");
+		lblWriteFiles.setFont(new Font("Dialog", Font.PLAIN, 12));
+		panel_runStatus.add(lblWriteFiles, "1, 6, right, default");
+		
+		checkBox_saveOutData = new JCheckBox("");
+		panel_runStatus.add(checkBox_saveOutData, "2, 6");
+		
+		JLabel lblLogInformation = new JLabel("Log Information");
+		panel_runStatus.add(lblLogInformation, "1, 8, 2, 1, center, default");
+		
+		textArea_logFile = new JTextArea();
+		textArea_logFile.setColumns(25);
+		textArea_logFile.setRows(15);
+		JScrollPane sp = new JScrollPane(textArea_logFile);
+		panel_runStatus.add(sp, "1, 10, 2, 1, center, top");
+		
+		return files;
+	}
+	public void setProgressBarVisible(boolean visible) {
+		progressBar.setVisible(visible);
+	}
+	public void setProgress(int percent) {
+		progressBar.setValue(percent);
+	}
+	public boolean getSaveOutData() {
+		return checkBox_saveOutData.isSelected();
 	}
 }

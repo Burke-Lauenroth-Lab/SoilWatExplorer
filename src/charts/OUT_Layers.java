@@ -46,13 +46,34 @@ public class OUT_Layers extends OutputChart implements ActionListener {
 		this.data = control.onGetOutput(key, p);
 		
 		JPanel temp = new JPanel();
+		temp.setLayout(new BoxLayout(temp, BoxLayout.PAGE_AXIS));
+		JPanel row1 = new JPanel();
+		JPanel row2 = new JPanel();
+		JPanel row3 = new JPanel();
+		JPanel row4 = new JPanel();
 		
 		for(int lyr=0; lyr<control.onGet_nColumns(key); lyr++) {
 			JCheckBox cb = new JCheckBox("Layer:"+String.valueOf(lyr+1), true);
 			cb.addActionListener(this);
-			temp.add(cb);
+			if(lyr < 8)
+				row1.add(cb);
+			if(lyr >= 8 && lyr < 16)
+				row2.add(cb);
+			if(lyr >= 16 && lyr < 24)
+				row3.add(cb);
+			if(lyr >= 24 && lyr < 25)
+				row4.add(cb);
 			chbx_layers.add(cb);
 		}
+		int lyrs = control.onGet_nColumns(key);
+		if(lyrs > 0)
+			temp.add(row1);
+		if(lyrs > 8)
+			temp.add(row2);
+		if(lyrs > 16)
+			temp.add(row3);
+		if(lyrs > 24)
+			temp.add(row4);
 		
 		chart = createChartPanel();
 		this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
@@ -62,9 +83,11 @@ public class OUT_Layers extends OutputChart implements ActionListener {
 	
 	private XYDataset createDatasetTemp() {
 		xyseriescollection = new XYSeriesCollection();
+		series.clear();
 		for(int lyr=0; lyr<control.onGet_nColumns(key); lyr++) {
-			series.add(getLayer(lyr));
-			xyseriescollection.addSeries(getLayer(lyr));
+			XYSeries temp = getLayer(lyr);
+			series.add(temp);
+			xyseriescollection.addSeries(temp);
 		}
 		return xyseriescollection;
 	}

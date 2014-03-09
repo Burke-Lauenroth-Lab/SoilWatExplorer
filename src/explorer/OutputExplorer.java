@@ -2,6 +2,8 @@ package explorer;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
 
@@ -10,7 +12,7 @@ import soilwat.SW_CONTROL;
 
 public class OutputExplorer extends JFrame {
 	private static final long serialVersionUID = 1L;
-	OUTDATA test;
+	List<OUTDATA> runs = new ArrayList<OUTDATA>();
 	
 	public OutputExplorer() {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -21,9 +23,9 @@ public class OutputExplorer extends JFrame {
 	}
 	
 	public void addOutput(SW_CONTROL control, InputData.OutputIn out) {
-		test = new OUTDATA(control, out);
-		this.setContentPane(test);
-		this.setVisible(true);
-		this.pack();
+		//OUTDATA output = new OUTDATA(control, out);
+		//this.setContentPane(output);
+		//this.setVisible(true);
+		//this.pack();
 	}
 }

@@ -2,6 +2,7 @@ package charts;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Component;
 
 import javax.swing.JPanel;
 
@@ -31,6 +32,7 @@ public class OUT_Weather extends OutputChart {
 
 	public OUT_Weather(SW_CONTROL control, OutPeriod p){
 		super(control, control.onGet_Timing(), p);
+		setAlignmentY(Component.TOP_ALIGNMENT);
 		this.key = OutKey.eSW_Temp;
 		this.data = control.onGetOutput(key, p);
 		chart = createWeatherTempPanel();

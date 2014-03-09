@@ -86,11 +86,14 @@ public class OUTPUT implements ActionListener{
 			if(key_use.get(i) != null) {
 				if(out.outputs[i] != null) {
 					key_use.get(i).setSelected(out.outputs[i].use);
-					key_sumType.get(i).setSelectedIndex(out.outputs[i].sumtype.idx());
-					key_Period.get(i).setSelectedIndex(out.outputs[i].periodColumn.idx());
+					if(out.outputs[i].sumtype != null)
+						key_sumType.get(i).setSelectedIndex(out.outputs[i].sumtype.idx());
+					if(out.outputs[i].periodColumn != null)
+						key_Period.get(i).setSelectedIndex(out.outputs[i].periodColumn.idx());
 					key_start.get(i).setValue(out.outputs[i].first_orig);
 					key_end.get(i).setValue(out.outputs[i].last_orig);
-					key_filePrefix.get(i).setText(out.outputs[i].filename_prefix);
+					if(out.outputs[i].filename_prefix != null)
+						key_filePrefix.get(i).setText(out.outputs[i].filename_prefix);
 				}
 			}
 		}

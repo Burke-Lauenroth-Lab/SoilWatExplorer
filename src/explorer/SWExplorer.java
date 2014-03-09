@@ -30,10 +30,27 @@ import javax.swing.JMenu;
 import javax.swing.JSeparator;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import events.SoilwatEvent;
+import events.SoilwatListener;
 
 public class SWExplorer implements ActionListener, MenuListener{
-
-	public class SoilWat {
+	
+	private static class RunModel implements Runnable {
+		
+		private SoilWat model;
+		
+		public RunModel(SoilWat model) {
+			this.model = model;
+		}
+		public void run() {
+			model.onSave(null);
+			model.onRun();
+		}
+	}
+	
+	public class SoilWat implements SoilwatListener {
 		private soilwat.InputData inputData;
 		private soilwat.SW_CONTROL control = new SW_CONTROL();
 	
@@ -49,8 +66,12 @@ public class SWExplorer implements ActionListener, MenuListener{
 		private WEATHER weather;
 		private SWC swc;
 		private OUTPUT out;
+		private OUTDATA output;
+		
+		private JTabbedPane tabbedPane;
 		
 		public SoilWat(String ProjectName, boolean defaultData, String filesIn) {
+			this.control.addSoilwatEventListener(this);
 			this.ProjectName = ProjectName;
 			if(filesIn == "") {
 				inputData = new InputData();
@@ -112,6 +133,7 @@ public class SWExplorer implements ActionListener, MenuListener{
 		}
 		
 		public void onSave(String Project) {
+			control.onClear();
 			control.onGetLog().clear();
 			onGetInput();
 			if(Project!=null)
@@ -120,21 +142,31 @@ public class SWExplorer implements ActionListener, MenuListener{
 				control.onSetInput(inputData);
 				control.onWriteOutputs(inputData.filesIn.ProjectDirectory.toString());
 				if(control.onGetLog().size() != 0)
-					JOptionPane.showMessageDialog(null, control.onGetLog(),"Saved", JOptionPane.INFORMATION_MESSAGE);
+					files.textArea_logFile.setText(control.onGetLog().toString());
+					//JOptionPane.showMessageDialog(null, control.onGetLog(),"Saved", JOptionPane.INFORMATION_MESSAGE);
 			} catch(Exception e) {
 				JOptionPane.showMessageDialog(null, e.toString(),"Alert", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		
 		public void onRun() {
+			tabbedPane.setSelectedIndex(0);			
 			control.onGetLog().clear();
 			try {
-				control.onStartModel(false);
+				control.onStartModel(false, files.getSaveOutData());
 				if(control.onGetLog().size() != 0)
-					JOptionPane.showMessageDialog(null, control.onGetLog(),"Executed", JOptionPane.OK_OPTION);
+					files.textArea_logFile.setText(control.onGetLog().toString());
+					//JOptionPane.showMessageDialog(null, control.onGetLog(),"Executed", JOptionPane.OK_OPTION);
 			} catch(Exception e) {
 				JOptionPane.showMessageDialog(null, e.toString(),"Error", JOptionPane.ERROR_MESSAGE);
 			}
+			if(output != null) {
+				tabbedPane.remove(output);
+			}
+			output = new OUTDATA(control, inputData.outputSetupIn, files.progressBar);
+			soilwatEvent(new SoilwatEvent(0, 100));
+			tabbedPane.addTab("Output Data", output);
+			tabbedPane.setSelectedComponent(output);
 		}
 		
 		public void onVerify() {
@@ -142,7 +174,8 @@ public class SWExplorer implements ActionListener, MenuListener{
 			try {
 				if(control.onVerify()) {
 					if(control.onGetLog().size() != 0)
-						JOptionPane.showMessageDialog(null, control.onGetLog(),"Verified", JOptionPane.INFORMATION_MESSAGE);
+						files.textArea_logFile.setText(control.onGetLog().toString());
+						//JOptionPane.showMessageDialog(null, control.onGetLog(),"Verified", JOptionPane.INFORMATION_MESSAGE);
 				} else {
 					JOptionPane.showMessageDialog(null, control.onGetLog(),"Error", JOptionPane.ERROR_MESSAGE);
 				}
@@ -150,14 +183,16 @@ public class SWExplorer implements ActionListener, MenuListener{
 				JOptionPane.showMessageDialog(null, e.toString(),"Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
-		
+		public void resetProgressBar() {
+			files.setProgress(0);
+		}
 		private JTabbedPane onGetPanel() {
-			JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+			tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 			tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 			//frame.getContentPane().add(tabbedPane);
 			
-			tabbedPane.addTab("Files", null, files.onGetPanel_files(), null);
-			tabbedPane.addTab("Model Timing", null, model.onGetPanel_model(), null);
+			tabbedPane.addTab("Files & Model", null, files.onGetPanel_files(model.onGetPanel_model()), null);
+			//tabbedPane.addTab("Model Timing", null, model.onGetPanel_model(), null);
 			tabbedPane.addTab("Site Params", null, site.onGetPanel_site(), null);
 			tabbedPane.addTab("Soil Layers", null, soils.onGetPanel_soils(), null);
 			tabbedPane.addTab("Plant Production", null, prod.onGetPanel_prod(), null);
@@ -170,6 +205,10 @@ public class SWExplorer implements ActionListener, MenuListener{
 			onSetInput();
 			
 			return tabbedPane;
+		}
+		@Override
+		public void soilwatEvent(SoilwatEvent e) {
+			files.setProgress((int)e.getPercent()*50);
 		}
 	}
 	
@@ -224,7 +263,7 @@ public class SWExplorer implements ActionListener, MenuListener{
 		fc = new JFileChooser();
     	fc.setAcceptAllFileFilterUsed(false);
     	fc.setMultiSelectionEnabled(false);
-    	//fc.setFileFilter(new FileNameExtensionFilter("files_v30", "in"));
+    	fc.setFileFilter(new FileNameExtensionFilter("files_v30", "in"));
 		
 		initialize();
 		
@@ -370,6 +409,8 @@ public class SWExplorer implements ActionListener, MenuListener{
 	        	} else {
 	        		prjName = file.getRoot().toString();
 	        	}
+	        	prjName = JOptionPane.showInputDialog("Project Name:", prjName);
+	        	
 	        	if(titles.contains(prjName)) {
 	        		JOptionPane.showMessageDialog(null, "Project Name Already Taken","Alert", JOptionPane.ERROR_MESSAGE);
 				} else {
@@ -443,12 +484,12 @@ public class SWExplorer implements ActionListener, MenuListener{
 		if(src==mntm_Run) {
 			String title = tabbedPane.getTitleAt(tabbedPane.getSelectedIndex());
 			
+			nameToProject.get(title).resetProgressBar();
 			//Save the project
-			nameToProject.get(title).onSave(null);
-			nameToProject.get(title).onRun();
-			
-			OutputExplorer exp = new OutputExplorer();
-			exp.addOutput(nameToProject.get(title).control, nameToProject.get(title).inputData.outputSetupIn);
+			Thread exe = new Thread(new RunModel(nameToProject.get(title)));
+			exe.start();
+			//nameToProject.get(title).onSave(null);
+			//nameToProject.get(title).onRun();
 		}
 		if(src==mntm_exit) {
 			System.exit(0);
