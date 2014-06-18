@@ -13,6 +13,7 @@ import javax.swing.JPanel;
 
 import charts.Map;
 import charts.Weather;
+import database.ProgressBar;
 import database.WeatherData;
 
 import com.jgoodies.forms.layout.FormLayout;
@@ -25,6 +26,8 @@ import javax.swing.JLabel;
 import javax.swing.JFormattedTextField;
 import javax.swing.JButton;
 import javax.swing.BoxLayout;
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
 
 import org.openstreetmap.gui.jmapviewer.SiteEvent;
 
@@ -76,22 +79,69 @@ public class DatabaseWeatherSelector extends JFrame implements ActionListener, S
 	private JLabel lbl_MAT_C;
 	private JLabel lbl_MAP_cm;
 	private int Site_id;
+	private int Scenario;
+	private JTextField folderName;
+	private JLabel lblClimateScenario;
+	private JComboBox<String> comboBox_scenario;
+	private final Thread exe;
 	
+	private JPanel panel_siteControl;
+	
+	private class GetData implements Runnable {
+
+		private Map map;
+		
+		public GetData(Map map) {
+			this.map = map;
+		}
+		
+		@Override
+		public void run() {
+			map_min = data.getMinMeanAnnualPPT(1);
+			map_max = data.getMaxMeanAnnualPPT(1);
+			mat_min = data.getMinMeanAnnualTemp(1);
+			mat_max = data.getMaxMeanAnnualTemp(1);
+			latitude_max = data.getMaxLatitude();
+			latitude_min = data.getMinLatitude();
+			longitude_max = data.getMaxLongitude();
+			longitude_min = data.getMinLongitude();
+			
+			formattedTextField_lat_min.setValue(new Double(latitude_min));
+			formattedTextField_lat_max.setValue(new Double(latitude_max));
+			formattedTextField_long_min.setValue(new Double(longitude_min));
+			formattedTextField_long_max.setValue(new Double(longitude_max));
+			formattedTextField_mat_min.setValue(new Double(mat_min));
+			formattedTextField_mat_max.setValue(new Double(mat_max));
+			formattedTextField_map_min.setValue(new Double(map_min));
+			formattedTextField_map_max.setValue(new Double(map_max));
+			
+			String[] model = data.getScenarioNames();
+			comboBox_scenario.setModel(new DefaultComboBoxModel<String>(model));
+			comboBox_scenario.setSelectedIndex(0);
+			
+			map.onSetMapMarkers_db(data.getSites(1, latitude_min, latitude_max, longitude_min, longitude_max, mat_min, mat_max, map_min, map_max));
+			
+			lbl_totalSites.setText("Sites: "+String.valueOf(data.getNumberSites()));
+			lbl_totalDisplayed.setText("Displayed: "+String.valueOf(map.getNumberMarkers()));
+			
+			finialize();
+			unlock();
+		}
+		
+	}
+	private void unlock() {
+		this.setEnabled(true);
+	}
+	private void finialize() {
+		this.pack();
+	}
 	public DatabaseWeatherSelector(Path weatherDB, soilwat.SW_WEATHER_HISTORY hist) {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 827, 513);
+		this.Scenario = 1;
 		plots = new Weather();
 		data = new WeatherData(weatherDB);
-		map_min = data.getMinMeanAnnualPPT();
-		map_max = data.getMaxMeanAnnualPPT();
-		mat_min = data.getMinMeanAnnualTemp();
-		mat_max = data.getMaxMeanAnnualTemp();
-		latitude_max = data.getMaxLatitude();
-		latitude_min = data.getMinLatitude();
-		longitude_max = data.getMaxLongitude();
-		longitude_min = data.getMinLongitude();
 		this.hist = hist;
-		map.onSetMapMarkers_db(data.getSites(latitude_min, latitude_max, longitude_min, longitude_max, mat_min, mat_max, map_min, map_max));
 		map.addSiteListener(this);
 		
 		Format format = NumberFormat.getNumberInstance();
@@ -105,7 +155,7 @@ public class DatabaseWeatherSelector extends JFrame implements ActionListener, S
 		panel_control_map = new JPanel();
 		panel_overall.add(panel_control_map);
 		
-		JPanel panel_siteControl = new JPanel();
+		panel_siteControl = new JPanel();
 		panel_control_map.add(panel_siteControl);
 		panel_siteControl.setLayout(new FormLayout(new ColumnSpec[] {
 				ColumnSpec.decode("default:grow"),
@@ -129,73 +179,72 @@ public class DatabaseWeatherSelector extends JFrame implements ActionListener, S
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,}));
 		
+		this.lblClimateScenario = new JLabel("Climate Scenario:");
+		panel_siteControl.add(this.lblClimateScenario, "1, 1, right, default");
+		
+		this.comboBox_scenario = new JComboBox<String>();
+		panel_siteControl.add(this.comboBox_scenario, "3, 1, 3, 1, fill, default");
+		this.comboBox_scenario.addActionListener(this);
+		
 		JLabel lblMinimum = new JLabel("Minimum");
-		panel_siteControl.add(lblMinimum, "3, 1");
+		panel_siteControl.add(lblMinimum, "3, 3");
 		
 		JLabel lblMax = new JLabel("Maximum");
-		panel_siteControl.add(lblMax, "5, 1");
+		panel_siteControl.add(lblMax, "5, 3");
 		
 		JLabel lblLatitude = new JLabel("Latitude");
-		panel_siteControl.add(lblLatitude, "1, 3, right, default");
+		panel_siteControl.add(lblLatitude, "1, 5, right, default");
 		
 		formattedTextField_lat_min = new JFormattedTextField(format);
-		formattedTextField_lat_min.setValue(new Double(latitude_min));
-		panel_siteControl.add(formattedTextField_lat_min, "3, 3, fill, default");
+		panel_siteControl.add(formattedTextField_lat_min, "3, 5, fill, default");
 		
 		formattedTextField_lat_max = new JFormattedTextField(format);
-		formattedTextField_lat_max.setValue(new Double(latitude_max));
-		panel_siteControl.add(formattedTextField_lat_max, "5, 3, fill, default");
+		panel_siteControl.add(formattedTextField_lat_max, "5, 5, fill, default");
 		
 		JLabel lblLongitude = new JLabel("Longitude");
-		panel_siteControl.add(lblLongitude, "1, 5, right, default");
+		panel_siteControl.add(lblLongitude, "1, 7, right, default");
 		
 		formattedTextField_long_min = new JFormattedTextField();
-		formattedTextField_long_min.setValue(new Double(longitude_min));
-		panel_siteControl.add(formattedTextField_long_min, "3, 5, fill, default");
+		panel_siteControl.add(formattedTextField_long_min, "3, 7, fill, default");
 		
 		formattedTextField_long_max = new JFormattedTextField(format);
-		formattedTextField_long_max.setValue(new Double(longitude_max));
-		panel_siteControl.add(formattedTextField_long_max, "5, 5, fill, default");
+		panel_siteControl.add(formattedTextField_long_max, "5, 7, fill, default");
 		
 		JLabel lblMAT = new JLabel("MAT Celsius");
-		panel_siteControl.add(lblMAT, "1, 7, right, default");
+		panel_siteControl.add(lblMAT, "1, 9, right, default");
 		
 		formattedTextField_mat_min = new JFormattedTextField(format);
-		formattedTextField_mat_min.setValue(new Double(mat_min));
-		panel_siteControl.add(formattedTextField_mat_min, "3, 7, fill, default");
+		panel_siteControl.add(formattedTextField_mat_min, "3, 9, fill, default");
 		
 		formattedTextField_mat_max = new JFormattedTextField(format);
-		formattedTextField_mat_max.setValue(new Double(mat_max));
-		panel_siteControl.add(formattedTextField_mat_max, "5, 7, fill, default");
+		panel_siteControl.add(formattedTextField_mat_max, "5, 9, fill, default");
 		
 		JLabel lblMAP = new JLabel("MAP cm");
-		panel_siteControl.add(lblMAP, "1, 9, right, default");
+		panel_siteControl.add(lblMAP, "1, 11, right, default");
 		
 		formattedTextField_map_min = new JFormattedTextField(format);
-		formattedTextField_map_min.setValue(new Double(map_min));
-		panel_siteControl.add(formattedTextField_map_min, "3, 9, fill, default");
+		panel_siteControl.add(formattedTextField_map_min, "3, 11, fill, default");
 		
 		formattedTextField_map_max = new JFormattedTextField(format);
-		formattedTextField_map_max.setValue(new Double(map_max));
-		panel_siteControl.add(formattedTextField_map_max, "5, 9, fill, default");
+		panel_siteControl.add(formattedTextField_map_max, "5, 11, fill, default");
 		
 		btn_ClearMap = new JButton("Clear Map");
 		btn_ClearMap.addActionListener(this);
-		panel_siteControl.add(btn_ClearMap, "3, 11");
+		panel_siteControl.add(btn_ClearMap, "3, 13");
 		
 		btn_Update = new JButton("Update");
 		btn_Update.addActionListener(this);
-		panel_siteControl.add(btn_Update, "5, 11");
+		panel_siteControl.add(btn_Update, "5, 13");
 		
 		lbl_totalSites = new JLabel("Sites: ");
-		lbl_totalSites.setText("Sites: "+String.valueOf(data.getNumberSites()));
-		panel_siteControl.add(lbl_totalSites, "3, 13");
+		panel_siteControl.add(lbl_totalSites, "3, 15");
 		
 		lbl_totalDisplayed = new JLabel("Displayed:");
-		lbl_totalDisplayed.setText("Displayed: "+String.valueOf(map.getNumberMarkers()));
-		panel_siteControl.add(lbl_totalDisplayed, "5, 13");
+		panel_siteControl.add(lbl_totalDisplayed, "5, 15");
 		
 		btn_load = new JButton("Load Site");
 		btn_load.setEnabled(false);
@@ -203,23 +252,46 @@ public class DatabaseWeatherSelector extends JFrame implements ActionListener, S
 		
 		comboBox_startYear = new JComboBox<Integer>();
 		comboBox_startYear.setEnabled(false);
-		panel_siteControl.add(comboBox_startYear, "1, 15, fill, default");
+		panel_siteControl.add(comboBox_startYear, "1, 17, fill, default");
 		
 		comboBox_endYear = new JComboBox<Integer>();
 		comboBox_endYear.setEnabled(false);
 		
-		panel_siteControl.add(comboBox_endYear, "3, 15, fill, default");
-		panel_siteControl.add(btn_load, "5, 15");
+		panel_siteControl.add(comboBox_endYear, "3, 17, fill, default");
+		panel_siteControl.add(btn_load, "5, 17");
 		
 		lbl_MAT_C = new JLabel("");
 		lbl_MAT_C.setFont(new Font("Dialog", Font.PLAIN, 12));
-		panel_siteControl.add(lbl_MAT_C, "1, 16");
+		panel_siteControl.add(lbl_MAT_C, "1, 18");
 		
 		lbl_MAP_cm = new JLabel("");
 		lbl_MAP_cm.setFont(new Font("Dialog", Font.PLAIN, 12));
-		panel_siteControl.add(lbl_MAP_cm, "3, 16");
+		panel_siteControl.add(lbl_MAP_cm, "3, 18");
+		
+		this.folderName = new JTextField("");
+		folderName.setEditable(false);
+		panel_siteControl.add(this.folderName, "5, 18");
 		
 		panel_control_map.add(map.get_MapPanel());
+		
+		exe = new Thread(new GetData(map));
+		
+		if(!data.checkClimateTable() || !data.checkAllClimateTableRows()) {
+			Object[] options = {"Yes","No"};
+			int choice = JOptionPane.showOptionDialog(null, "Weather database is missing climate table or rows in climate table, fix?", "Weather Data", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+			if(choice == 0) {
+				javax.swing.SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						ProgressBar.createAndShowGUI(exe, data);
+					}
+				});
+				this.setEnabled(false);
+			} else {
+				exe.start();
+			}
+		} else {
+			exe.start();
+		}
 	}
 	public void onGetValues() {
 		latitude_min = ((Number)formattedTextField_lat_min.getValue()).doubleValue();
@@ -231,30 +303,45 @@ public class DatabaseWeatherSelector extends JFrame implements ActionListener, S
 		map_min = ((Number)formattedTextField_map_min.getValue()).doubleValue();
 		map_max = ((Number)formattedTextField_map_max.getValue()).doubleValue();
 	}
+	public void onSetValues() {
+		formattedTextField_lat_min.setValue(new Double(latitude_min));
+		formattedTextField_lat_max.setValue(new Double(latitude_max));
+		formattedTextField_long_min.setValue(new Double(longitude_min));
+		formattedTextField_long_max.setValue(new Double(longitude_max));
+		formattedTextField_mat_min.setValue(new Double(mat_min));
+		formattedTextField_mat_max.setValue(new Double(mat_max));
+		formattedTextField_map_min.setValue(new Double(map_min));
+		formattedTextField_map_max.setValue(new Double(map_max));
+	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object src = e.getSource();
 		if(src == btn_ClearMap) {
 			map.removeAllMarkers();
+			onSetValues();
 			this.lbl_totalDisplayed.setText("Displayed: "+String.valueOf(map.getNumberMarkers()));
 		}
 		if(src == btn_Update) {
 			map.removeAllMarkers();
 			onGetValues();
-			map.onSetMapMarkers_db(data.getSites(latitude_min, latitude_max, longitude_min, longitude_max, mat_min, mat_max, map_min, map_max));
+			map.onSetMapMarkers_db(data.getSites(Scenario, latitude_min, latitude_max, longitude_min, longitude_max, mat_min, mat_max, map_min, map_max));
 			this.lbl_totalDisplayed.setText("Displayed: "+String.valueOf(map.getNumberMarkers()));
 		}
 		if(src == btn_load) {
 			hist.removeAll();
 			int startYear = ((Number)comboBox_startYear.getSelectedItem()).intValue();
 			int endYear = ((Number)comboBox_endYear.getSelectedItem()).intValue();
-			List<database.WeatherData.YearData> temp = data.getData(this.Site_id, startYear, endYear);
+			List<database.WeatherData.YearData> temp = data.getData(this.Site_id, Scenario, startYear, endYear);
 			for (database.WeatherData.YearData year : temp) {
 				hist.add_year(year.year, year.ppt, year.Tmax, year.Tmin);
 			}
 			siteEvent.siteSelected(Site_id);
 			this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+		}
+		if(src == comboBox_scenario) {
+			this.Scenario = comboBox_scenario.getSelectedIndex()+1;
+			siteSelected(Site_id);
 		}
 	}
 	@Override
@@ -263,8 +350,8 @@ public class DatabaseWeatherSelector extends JFrame implements ActionListener, S
 		this.btn_load.setEnabled(true);
 		this.comboBox_startYear.setEnabled(true);
 		this.comboBox_endYear.setEnabled(true);
-		int start = data.getMaxYear(Site);
-		int end = data.getMinYear(Site);
+		int end = data.getMaxYear(Site, this.Scenario);
+		int start = data.getMinYear(Site, this.Scenario);
 		Integer[] model = new Integer[end-start+1];
 		for(int i=start; i <= end; i++) {
 			model[i-start] = i;
@@ -274,20 +361,24 @@ public class DatabaseWeatherSelector extends JFrame implements ActionListener, S
 		this.comboBox_endYear.setModel(new DefaultComboBoxModel<Integer>(model));
 		this.comboBox_endYear.setSelectedIndex(model.length - 1);
 		
-		double[] temp = data.getMeanMonthlyTemp(Site);
-		double[] ppt = data.getMeanMonthlyPPT(Site);
+		double[] temp = data.getMeanMonthlyTemp(Site, Scenario);
+		double[] ppt = data.getMeanMonthlyPPT(Site, Scenario);
+		double[] delta_tempMin = data.getCP_TminAdd(Site, Scenario);
+		double[] delta_tempMax = data.getCP_TmaxAdd(Site, Scenario);
+		double[] delta_PPT = data.getCP_PrcpMult(Site, Scenario);
 		
 		if(graphs == null) {
-			graphs = plots.create_DatabasePanel(temp, ppt, Site);
+			graphs = plots.create_DatabasePanel(temp, delta_tempMin, delta_tempMax, ppt, delta_PPT, Site);
 			this.panel_overall.add(graphs);
 		} else {
 			this.panel_overall.remove(graphs);
-			graphs = plots.create_DatabasePanel(temp, ppt, Site);
+			graphs = plots.create_DatabasePanel(temp, delta_tempMin, delta_tempMax, ppt, delta_PPT, Site);
 			this.panel_overall.add(graphs);
 			this.panel_overall.revalidate();
 			this.pack();
 		}
-		lbl_MAP_cm.setText("MAP cm: "+String.format("%.4f",data.getMAP(Site)));
-		lbl_MAT_C.setText("MAT Celsius: "+String.format("%.4f",data.getMAT(Site)));
+		lbl_MAP_cm.setText("MAP cm: "+String.format("%.4f",data.getMAP(Site, this.Scenario)));
+		lbl_MAT_C.setText("MAT Celsius: "+String.format("%.4f",data.getMAT(Site, this.Scenario)));
+		folderName.setText("Weather_NCEPCFSR_"+String.format("%.3f", data.getLatitude(Site))+"-"+String.format("%.3f", data.getLongitude(Site)));
 	}
 }

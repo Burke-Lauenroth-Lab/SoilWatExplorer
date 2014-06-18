@@ -642,6 +642,20 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 		btn_folder_load = new JButton("Load");
 		btn_folder_load.setEnabled(false);
 		btn_folder_load.setFont(new Font("Dialog", Font.PLAIN, 12));
+		btn_folder_load.addActionListener(new ActionListener() {@Override
+			public void actionPerformed(ActionEvent e) {
+
+				String prefix = Paths.get(weatherPrefix).getFileName().toString();
+				int startYear = ((Number)comboBox_folder_start.getSelectedItem()).intValue();
+				int stopYear = ((Number)comboBox_folder_end.getSelectedItem()).intValue();
+				try {
+					weatherHist.onRead(folderPath, prefix, startYear, stopYear);
+					onReset_list();
+				} catch (Exception e1) {
+					JOptionPane.showMessageDialog(null, "FAILED TO READ: "+e.toString(),"ERROR", JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		});	
 		panel_1.add(btn_folder_load);
 		
 		JLabel lblNewLabel_10 = new JLabel("Weather Data from Database");

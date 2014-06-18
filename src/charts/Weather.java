@@ -279,16 +279,22 @@ public class Weather extends JFrame implements ActionListener, ItemListener {
 	private XYDataset createDatasetPPT() {
 		hist.setCurrentYear(this.year);
 		YIntervalSeries yintervalseries = new YIntervalSeries("Precipitation (cm)");
+		YIntervalSeries yintervalseriesSum = new YIntervalSeries("Precip Accumulation (cm)");
 		
         Object obj = new Day(1,1,this.year);
         
+        double sum=0;
         for (int i = 0; i < hist.getDays(); i++)
         {
+        	sum+=hist.get_ppt(i);
         	yintervalseries.add(((RegularTimePeriod) (obj)).getFirstMillisecond(), hist.get_ppt(i), 0, 0);
+        	yintervalseriesSum.add(((RegularTimePeriod) (obj)).getFirstMillisecond(), sum, 0, 0);
            	obj = ((RegularTimePeriod) (obj)).next();
         }
+        
         YIntervalSeriesCollection yintervalseriescollection = new YIntervalSeriesCollection();
         yintervalseriescollection.addSeries(yintervalseries);
+        yintervalseriescollection.addSeries(yintervalseriesSum);
         
         return yintervalseriescollection;
 	}
@@ -335,22 +341,42 @@ public class Weather extends JFrame implements ActionListener, ItemListener {
 	}
 	
 	//for database
-	private XYDataset createDataset_meanMonthly_Temp(double[] values, int Site_id) {
-		XYSeries xyseries = new XYSeries("Mean Monthly Temp for Site: "+String.valueOf(Site_id));
+	private XYDataset createDataset_meanMonthly_Temp(double[] MMTemp, double[] CPTempMin, double[] CPTempMax,  int Site_id) {
+		XYSeries xyseriesMMTemp = new XYSeries("Mean Monthly Temp for Site: "+String.valueOf(Site_id));
 		for(int i=0; i<12; i++) {
-			xyseries.add(i+1, values[i]);
+			xyseriesMMTemp.add(i+1, MMTemp[i]);
 		}
+		
+		XYSeries xyseriesCPTempMin = new XYSeries("Climate Perturbation Temp Min Additive");
+		for(int i=0; i<12; i++) {
+			xyseriesCPTempMin.add(i+1, CPTempMin[i]);
+		}
+		
+		XYSeries xyseriesCPTempMax = new XYSeries("Climate Perturbation Temp Max Additive");
+		for(int i=0; i<12; i++) {
+			xyseriesCPTempMax.add(i+1, CPTempMax[i]);
+		}
+		
 		XYSeriesCollection xyseriescollection = new XYSeriesCollection();
-		xyseriescollection.addSeries(xyseries);
+		xyseriescollection.addSeries(xyseriesMMTemp);
+		xyseriescollection.addSeries(xyseriesCPTempMin);
+		xyseriescollection.addSeries(xyseriesCPTempMax);
 		return xyseriescollection;
 	}
-	private XYDataset createDataset_meanMonthly_PPT(double[] values, int Site_id) {
+	private XYDataset createDataset_meanMonthly_PPT(double[] values, double[] CPPPT, int Site_id) {
 		XYSeries xyseries = new XYSeries("Mean Monthly PPT for Site: "+String.valueOf(Site_id));
 		for(int i=0; i<12; i++) {
 			xyseries.add(i+1, values[i]);
 		}
+		
+		XYSeries xyseriesCP = new XYSeries("Climate Perturbation Prcp Multiplier");
+		for(int i=0; i<12; i++) {
+			xyseriesCP.add(i+1, CPPPT[i]);
+		}
+		
 		XYSeriesCollection xyseriescollection = new XYSeriesCollection();
 		xyseriescollection.addSeries(xyseries);
+		xyseriescollection.addSeries(xyseriesCP);
 		return xyseriescollection;
 	}
 	
@@ -423,10 +449,10 @@ public class Weather extends JFrame implements ActionListener, ItemListener {
 		return new ChartPanel(jfreechart);
 	}
 	//database//
-	public JPanel create_DatabasePanel(double[] temp, double[] ppt, int Site_id) {
+	public JPanel create_DatabasePanel(double[] temp, double[] CPtempMin, double[] CPtempMax, double[] ppt, double[] CPPPT, int Site_id) {
 		JPanel panel_tempPPT = new JPanel();
-		panel_tempPPT.add(new ChartPanel(createChart(createDataset_meanMonthly_Temp(temp, Site_id), "Mean Monthly Temperature for Site: "+String.valueOf(Site_id), "TEMP (C)")));
-		panel_tempPPT.add(new ChartPanel(createChart(createDataset_meanMonthly_PPT(ppt, Site_id), "Mean Monthly Precipitation for Site: "+String.valueOf(Site_id), "PPT (cm)")));
+		panel_tempPPT.add(new ChartPanel(createChart(createDataset_meanMonthly_Temp(temp, CPtempMin, CPtempMax, Site_id), "Mean Monthly Temperature for Site: "+String.valueOf(Site_id), "TEMP (C)")));
+		panel_tempPPT.add(new ChartPanel(createChart(createDataset_meanMonthly_PPT(ppt, CPPPT, Site_id), "Mean Monthly Precipitation for Site: "+String.valueOf(Site_id), "PPT (cm)")));
 		return panel_tempPPT;
 	}
 	@Override
