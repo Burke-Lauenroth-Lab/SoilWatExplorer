@@ -97,14 +97,14 @@ public class DatabaseWeatherSelector extends JFrame implements ActionListener, S
 		
 		@Override
 		public void run() {
-			map_min = data.getMinMeanAnnualPPT(1);
-			map_max = data.getMaxMeanAnnualPPT(1);
-			mat_min = data.getMinMeanAnnualTemp(1);
-			mat_max = data.getMaxMeanAnnualTemp(1);
-			latitude_max = data.getMaxLatitude();
-			latitude_min = data.getMinLatitude();
-			longitude_max = data.getMaxLongitude();
-			longitude_min = data.getMinLongitude();
+			map_min = data.getMinMeanAnnualPPT(1)-0.5;
+			map_max = data.getMaxMeanAnnualPPT(1)+0.5;
+			mat_min = data.getMinMeanAnnualTemp(1)-0.5;
+			mat_max = data.getMaxMeanAnnualTemp(1)+0.5;
+			latitude_max = data.getMaxLatitude()+0.5;
+			latitude_min = data.getMinLatitude()-0.5;
+			longitude_max = data.getMaxLongitude()+0.5;
+			longitude_min = data.getMinLongitude()-0.5;
 			
 			formattedTextField_lat_min.setValue(new Double(latitude_min));
 			formattedTextField_lat_max.setValue(new Double(latitude_max));

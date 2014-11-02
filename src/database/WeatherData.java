@@ -91,7 +91,6 @@ public class WeatherData {
 	    {
 	      // create a database connection
 	      connection = DriverManager.getConnection("jdbc:sqlite:"+weatherDatabase.toString());
-	      preparedStatement = connection.prepareStatement(insertClimateTableSQL);
 	    }
 	    catch(SQLException e)
 	    {
@@ -793,7 +792,9 @@ public class WeatherData {
 		try {
 			if(!checkClimateTable()) {
 				createClimateTable();
+				preparedStatement = connection.prepareStatement(insertClimateTableSQL);
 			}
+			preparedStatement = connection.prepareStatement(insertClimateTableSQL);
 			
 			Statement statement = connection.createStatement();
 			statement.setQueryTimeout(45);
