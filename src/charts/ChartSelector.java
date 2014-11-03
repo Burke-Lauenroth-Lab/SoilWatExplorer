@@ -50,63 +50,110 @@ public class ChartSelector extends JPanel implements PeriodEvent, KeyEvent {
 	private OutPeriod period;
 	private SW_CONTROL control;
 	
-	public ChartSelector(SW_CONTROL control, OutPeriod period, OutKey key) {
+	public ChartSelector(SW_CONTROL control, OutPeriod period, OutKey key, soilwat.InputData.OutputIn out) {
 		this.control = control;
 		this.period = period;
 		setLayout(new BorderLayout(0, 0));
 		
-		panel_weather = new OUT_Weather(this.control, this.period);
-		this.addPeriodEventListener(panel_weather);
+		if(out.outputs[OutKey.eSW_Temp.idx()].use) {
+			panel_weather = new OUT_Weather(this.control, period==null?out.outputs[OutKey.eSW_Temp.idx()].periodColumn:this.period);
+			this.addPeriodEventListener(panel_weather);
+		}
+		if(out.outputs[OutKey.eSW_Precip.idx()].use) {
+			panel_Precip = new OUT_MultipleSingle(this.control, OutKey.eSW_Precip, period==null?out.outputs[OutKey.eSW_Precip.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_Precip);
+		}
+		if(out.outputs[OutKey.eSW_Runoff.idx()].use) {
+			panel_Runoff = new OUT_MultipleSingle(this.control, OutKey.eSW_Runoff, period==null?out.outputs[OutKey.eSW_Runoff.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_Runoff);
+		}
+		if(out.outputs[OutKey.eSW_EvapSurface.idx()].use) {
+			panel_EvapSurface = new OUT_MultipleSingle(this.control, OutKey.eSW_EvapSurface, period==null?out.outputs[OutKey.eSW_EvapSurface.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_EvapSurface);
+		}
+		if(out.outputs[OutKey.eSW_Interception.idx()].use) {
+			panel_Interception = new OUT_MultipleSingle(this.control, OutKey.eSW_Interception, period==null?out.outputs[OutKey.eSW_Interception.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_Interception);
+		}
+		if(out.outputs[OutKey.eSW_SnowPack.idx()].use) {
+			panel_SnowPack = new OUT_MultipleSingle(this.control, OutKey.eSW_SnowPack, period==null?out.outputs[OutKey.eSW_SnowPack.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_SnowPack);
+		}
+		if(out.outputs[OutKey.eSW_Estab.idx()].use) {
+			panel_Estab = new OUT_MultipleSingle(this.control, OutKey.eSW_Estab, period==null?out.outputs[OutKey.eSW_Estab.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_Estab);
+		}
+		if(out.outputs[OutKey.eSW_SoilInf.idx()].use) {
+			panel_SoilInf = new OUT_Single(this.control, OutKey.eSW_SoilInf, period==null?out.outputs[OutKey.eSW_SoilInf.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_SoilInf);
+		}
+		if(out.outputs[OutKey.eSW_SurfaceWater.idx()].use) {
+			panel_SurfaceWater = new OUT_Single(this.control, OutKey.eSW_SurfaceWater, period==null?out.outputs[OutKey.eSW_SurfaceWater.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_SurfaceWater);
+		}
 		
-		panel_Precip = new OUT_MultipleSingle(this.control, OutKey.eSW_Precip, this.period);
-		this.addPeriodEventListener(panel_Precip);
-		panel_Runoff = new OUT_MultipleSingle(this.control, OutKey.eSW_Runoff, this.period);
-		this.addPeriodEventListener(panel_Runoff);
-		panel_EvapSurface = new OUT_MultipleSingle(this.control, OutKey.eSW_EvapSurface, this.period);
-		this.addPeriodEventListener(panel_EvapSurface);
-		panel_Interception = new OUT_MultipleSingle(this.control, OutKey.eSW_Interception, this.period);
-		this.addPeriodEventListener(panel_Interception);
-		panel_SnowPack = new OUT_MultipleSingle(this.control, OutKey.eSW_SnowPack, this.period);
-		this.addPeriodEventListener(panel_SnowPack);
-		panel_Estab = new OUT_MultipleSingle(this.control, OutKey.eSW_Estab, this.period);
-		this.addPeriodEventListener(panel_Estab);
+		if(out.outputs[OutKey.eSW_AET.idx()].use) {
+			panel_AET = new OUT_Single(this.control, OutKey.eSW_AET, period==null?out.outputs[OutKey.eSW_AET.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_AET);
+		}
+		if(out.outputs[OutKey.eSW_PET.idx()].use) {
+			panel_PET = new OUT_Single(this.control, OutKey.eSW_PET, period==null?out.outputs[OutKey.eSW_PET.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_PET);
+		}
+		if(out.outputs[OutKey.eSW_WetDays.idx()].use) {
+			panel_WetDays = new OUT_Single(this.control, OutKey.eSW_WetDays, period==null?out.outputs[OutKey.eSW_WetDays.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_WetDays);
+		}
+		if(out.outputs[OutKey.eSW_DeepSWC.idx()].use) {
+			panel_DeepSWC = new OUT_Single(this.control, OutKey.eSW_DeepSWC, period==null?out.outputs[OutKey.eSW_DeepSWC.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_DeepSWC);
+		}
 		
-		panel_SoilInf = new OUT_Single(this.control, OutKey.eSW_SoilInf, this.period);
-		this.addPeriodEventListener(panel_SoilInf);
-		panel_SurfaceWater = new OUT_Single(this.control, OutKey.eSW_SurfaceWater, this.period);
-		this.addPeriodEventListener(panel_SurfaceWater);
-		panel_AET = new OUT_Single(this.control, OutKey.eSW_AET, this.period);
-		this.addPeriodEventListener(panel_AET);
-		panel_PET = new OUT_Single(this.control, OutKey.eSW_PET, this.period);
-		this.addPeriodEventListener(panel_PET);
-		panel_WetDays = new OUT_Single(this.control, OutKey.eSW_WetDays, this.period);
-		this.addPeriodEventListener(panel_WetDays);
-		panel_DeepSWC = new OUT_Single(this.control, OutKey.eSW_DeepSWC, this.period);
-		this.addPeriodEventListener(panel_DeepSWC);
+		if(out.outputs[OutKey.eSW_VWCBulk.idx()].use) {
+			panel_VWCBulk = new OUT_Layers(this.control, OutKey.eSW_VWCBulk, period==null?out.outputs[OutKey.eSW_VWCBulk.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_VWCBulk);
+		}
+		if(out.outputs[OutKey.eSW_VWCMatric.idx()].use) {
+			panel_VWCMatric = new OUT_Layers(this.control, OutKey.eSW_VWCMatric, period==null?out.outputs[OutKey.eSW_VWCMatric.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_VWCMatric);
+		}
+		if(out.outputs[OutKey.eSW_SWCBulk.idx()].use) {
+			panel_SWCBulk = new OUT_Layers(this.control, OutKey.eSW_SWCBulk, period==null?out.outputs[OutKey.eSW_SWCBulk.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_SWCBulk);
+		}
+		if(out.outputs[OutKey.eSW_SWABulk.idx()].use) {
+			panel_SWABulk = new OUT_Layers(this.control, OutKey.eSW_SWABulk, period==null?out.outputs[OutKey.eSW_SWABulk.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_SWABulk);
+		}
+		if(out.outputs[OutKey.eSW_SWAMatric.idx()].use) {
+			panel_SWAMatric = new OUT_Layers(this.control, OutKey.eSW_SWAMatric, period==null?out.outputs[OutKey.eSW_SWAMatric.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_SWAMatric);
+		}
+		if(out.outputs[OutKey.eSW_SWPMatric.idx()].use) {
+			panel_SWPMatric = new OUT_Layers(this.control, OutKey.eSW_SWPMatric, period==null?out.outputs[OutKey.eSW_SWPMatric.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_SWPMatric);
+		}
+		if(out.outputs[OutKey.eSW_EvapSoil.idx()].use) {
+			panel_EvapSoil = new OUT_Layers(this.control, OutKey.eSW_EvapSoil, period==null?out.outputs[OutKey.eSW_EvapSoil.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_EvapSoil);
+		}
+		if(out.outputs[OutKey.eSW_LyrDrain.idx()].use) {
+			panel_LyrDrain = new OUT_Layers(this.control, OutKey.eSW_LyrDrain, period==null?out.outputs[OutKey.eSW_LyrDrain.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_LyrDrain);
+		}
+		if(out.outputs[OutKey.eSW_SoilTemp.idx()].use) {
+			panel_SoilTemp = new OUT_Layers(this.control, OutKey.eSW_SoilTemp, period==null?out.outputs[OutKey.eSW_SoilTemp.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_SoilTemp);
+		}
 		
-		panel_VWCBulk = new OUT_Layers(this.control, OutKey.eSW_VWCBulk, this.period);
-		this.addPeriodEventListener(panel_VWCBulk);
-		panel_VWCMatric = new OUT_Layers(this.control, OutKey.eSW_VWCMatric, this.period);
-		this.addPeriodEventListener(panel_VWCMatric);
-		panel_SWCBulk = new OUT_Layers(this.control, OutKey.eSW_SWCBulk, this.period);
-		this.addPeriodEventListener(panel_SWCBulk);
-		panel_SWABulk = new OUT_Layers(this.control, OutKey.eSW_SWABulk, this.period);
-		this.addPeriodEventListener(panel_SWABulk);
-		panel_SWAMatric = new OUT_Layers(this.control, OutKey.eSW_SWAMatric, this.period);
-		this.addPeriodEventListener(panel_SWAMatric);
-		panel_SWPMatric = new OUT_Layers(this.control, OutKey.eSW_SWPMatric, this.period);
-		this.addPeriodEventListener(panel_SWPMatric);
-		panel_EvapSoil = new OUT_Layers(this.control, OutKey.eSW_EvapSoil, this.period);
-		this.addPeriodEventListener(panel_EvapSoil);
-		panel_LyrDrain = new OUT_Layers(this.control, OutKey.eSW_LyrDrain, this.period);
-		this.addPeriodEventListener(panel_LyrDrain);
-		panel_SoilTemp = new OUT_Layers(this.control, OutKey.eSW_SoilTemp, this.period);
-		this.addPeriodEventListener(panel_SoilTemp);
-		
-		panel_TRANSP = new OUT_TypeLayer(this.control, OutKey.eSW_Transp, this.period);
-		this.addPeriodEventListener(panel_TRANSP);
-		panel_HYDRED = new OUT_TypeLayer(this.control, OutKey.eSW_HydRed, this.period);
-		this.addPeriodEventListener(panel_HYDRED);
+		if(out.outputs[OutKey.eSW_Transp.idx()].use) {
+			panel_TRANSP = new OUT_TypeLayer(this.control, OutKey.eSW_Transp, period==null?out.outputs[OutKey.eSW_Transp.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_TRANSP);
+		}
+		if(out.outputs[OutKey.eSW_HydRed.idx()].use) {
+			panel_HYDRED = new OUT_TypeLayer(this.control, OutKey.eSW_HydRed, period==null?out.outputs[OutKey.eSW_HydRed.idx()].periodColumn:period);
+			this.addPeriodEventListener(panel_HYDRED);
+		}
 		
 		keyChange(key);
 	}

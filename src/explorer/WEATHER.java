@@ -540,8 +540,9 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 				String prefix = Paths.get(weatherPrefix).getFileName().toString();
 				int startYear = ((Number)comboBox_lookup_start.getSelectedItem()).intValue();
 				int stopYear = ((Number)comboBox_lookup_stop.getSelectedItem()).intValue();
+				boolean useMarkov = chckbx_weather_useMarkov.isSelected();
 				try {
-					weatherHist.onRead(lookupWeatherFolder_FolderPath, prefix, startYear, stopYear);
+					weatherHist.onRead(lookupWeatherFolder_FolderPath, prefix, startYear, stopYear, useMarkov);
 					onReset_list();
 				} catch (Exception e1) {
 					JOptionPane.showMessageDialog(null, "FAILED TO READ: "+e.toString(),"ERROR", JOptionPane.ERROR_MESSAGE);
@@ -648,8 +649,9 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 				String prefix = Paths.get(weatherPrefix).getFileName().toString();
 				int startYear = ((Number)comboBox_folder_start.getSelectedItem()).intValue();
 				int stopYear = ((Number)comboBox_folder_end.getSelectedItem()).intValue();
+				boolean useMarkov = chckbx_weather_useMarkov.isSelected();
 				try {
-					weatherHist.onRead(folderPath, prefix, startYear, stopYear);
+					weatherHist.onRead(folderPath, prefix, startYear, stopYear, useMarkov);
 					onReset_list();
 				} catch (Exception e1) {
 					JOptionPane.showMessageDialog(null, "FAILED TO READ: "+e.toString(),"ERROR", JOptionPane.ERROR_MESSAGE);

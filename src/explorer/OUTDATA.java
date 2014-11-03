@@ -113,19 +113,23 @@ public class OUTDATA extends JPanel implements ListSelectionListener, ItemListen
 		this.out = out;
 		this.control = control;
 		for(int i=0; i<out.TimeSteps.length; i++) {
-			if(out.TimeSteps[i])
+			if(out.TimeSteps[i]) {
 				usePeriodColumn = false;
-		}
-		for(int i=0; i<out.outputs.length; i++)
-			if(out.outputs[i].use)
-				key_model.addElement(out.outputs[i]);
-		if(usePeriodColumn)
-			period_model.addElement(out.outputs[0].periodColumn);
-		else
-			for(int i=0; i<out.TimeSteps.length; i++) {
-				if(out.TimeSteps[i])
-					period_model.addElement(OutPeriod.fromInteger(i));
 			}
+		}
+		for(int i=0; i<out.outputs.length; i++) {
+			if(out.outputs[i].use) {
+				key_model.addElement(out.outputs[i]);
+			}
+			if(usePeriodColumn && out.outputs[i].use) {
+				period_model.addElement(out.outputs[i].periodColumn);
+			}
+		}
+		for(int i=0; i<out.TimeSteps.length; i++) {
+			if(!usePeriodColumn && out.TimeSteps[i]) {
+				period_model.addElement(OutPeriod.fromInteger(i));
+			}
+		}
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		
 		JPanel panel = new JPanel();
@@ -152,10 +156,21 @@ public class OUTDATA extends JPanel implements ListSelectionListener, ItemListen
 		list_outData_KeySelect.setSelectedIndex(0);
 		scrollPane_out_outTypes.setViewportView(list_outData_KeySelect);
 		
+		//
+		boolean usePeriodSelector = false;
+		for(int i=0; i<out.TimeSteps.length; i++) {
+			if(out.TimeSteps[i] == true) {
+				usePeriodSelector = true;
+				break;
+			}
+		}
 		comboBox_periodSelector = new JComboBox<SW_OUTPUT.OutPeriod>();
 		panel_side.add(comboBox_periodSelector);
 		comboBox_periodSelector.setModel(period_model);
 		comboBox_periodSelector.setSelectedIndex(0);
+		if(usePeriodSelector) {
+			comboBox_periodSelector.setVisible(false);
+		}
 		
 		onSetTable();
 		
@@ -165,8 +180,12 @@ public class OUTDATA extends JPanel implements ListSelectionListener, ItemListen
 		scrollPane_2.setPreferredSize(new Dimension(750,280));
 		panel.add(scrollPane_2);
 		scrollPane_2.addComponentListener(new ScrollingTableFix(table_data, scrollPane_2));
-		OutPeriod period = (SW_OUTPUT.OutPeriod)comboBox_periodSelector.getSelectedItem();
-		comboBox_periodSelector.addItemListener(this);
+		
+		OutPeriod period = null;
+		if(usePeriodSelector) {
+			period = (SW_OUTPUT.OutPeriod)comboBox_periodSelector.getSelectedItem();
+			comboBox_periodSelector.addItemListener(this);
+		}
 		
 		OutKey key = list_outData_KeySelect.getSelectedValue().mykey;
 		
@@ -174,7 +193,7 @@ public class OUTDATA extends JPanel implements ListSelectionListener, ItemListen
 		//listeners
 		list_outData_KeySelect.addListSelectionListener(this);
 		
-		panel_chart = new ChartSelector(control, period, key);
+		panel_chart = new ChartSelector(control, period, key, out);
 		add(panel_chart);
 		
 		pb.setValue(pb.getValue()+15);
