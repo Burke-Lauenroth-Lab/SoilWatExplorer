@@ -28,6 +28,8 @@ import soilwat.SW_CONTROL;
 
 import javax.swing.JMenu;
 import javax.swing.JSeparator;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -50,7 +52,7 @@ public class SWExplorer implements ActionListener, MenuListener{
 		}
 	}
 	
-	public class SoilWat implements SoilwatListener {
+	public class SoilWat implements SoilwatListener, ChangeListener {
 		private soilwat.InputData inputData;
 		private soilwat.SW_CONTROL control = new SW_CONTROL();
 	
@@ -64,6 +66,7 @@ public class SWExplorer implements ActionListener, MenuListener{
 		private ESTABL estab;
 		private CLOUD cloud;
 		private WEATHER weather;
+		private MARKOV markov;
 		private SWC swc;
 		private OUTPUT out;
 		private OUTDATA output;
@@ -99,6 +102,7 @@ public class SWExplorer implements ActionListener, MenuListener{
 			estab = new ESTABL(inputData.estabIn);
 			cloud = new CLOUD(inputData.cloudIn);
 			weather = new WEATHER(inputData.weatherSetupIn, inputData.weatherHist, inputData.filesIn);
+			markov = new MARKOV(inputData.markovIn, inputData.weatherHist);
 			swc = new SWC(inputData.swcSetupIn, inputData.swcHist);
 			out = new OUTPUT(inputData.outputSetupIn);
 		}
@@ -115,6 +119,7 @@ public class SWExplorer implements ActionListener, MenuListener{
 			estab.onSetValues();
 			cloud.onSetValues();
 			weather.onSetValues();
+			markov.onSetValues();
 			swc.onSetValues();
 			out.onSetValues();
 		}
@@ -128,6 +133,7 @@ public class SWExplorer implements ActionListener, MenuListener{
 			estab.onGetValues();
 			cloud.onGetValues();
 			weather.onGetValues();
+			markov.onGetValues();
 			swc.onGetValues();
 			out.onGetValues();
 		}
@@ -199,16 +205,26 @@ public class SWExplorer implements ActionListener, MenuListener{
 			tabbedPane.addTab("Establishment", null, estab.onGetPanel_establ(), null);
 			tabbedPane.addTab("Cloud", null, cloud.onGetPanel_cloud(), null);
 			tabbedPane.addTab("Weather Setup", null, weather.onGetPanel_weather(), null);
+			tabbedPane.addTab("Markov", null, markov.onGetPanel());
 			tabbedPane.addTab("SWC Setup", null, swc.onGetPanel_swc(), null);
 			tabbedPane.addTab("Output Setup", null, out.onGetPanel_output(), null);
+			tabbedPane.addChangeListener(this);
 			
 			onSetInput();
+			
 			
 			return tabbedPane;
 		}
 		@Override
 		public void soilwatEvent(SoilwatEvent e) {
 			files.setProgress((int)e.getPercent()*50);
+		}
+		@Override
+		public void stateChanged(ChangeEvent e) {
+			if(tabbedPane.getSelectedIndex() == 6)
+				weather.onReset_list();
+			if(tabbedPane.getSelectedIndex() == 7)
+				markov.onResetList();
 		}
 	}
 	
@@ -524,5 +540,21 @@ public class SWExplorer implements ActionListener, MenuListener{
 				mntm_saveAll.setEnabled(true);
 			}
 		}
+	}
+	
+	public List<Integer> FindDuplicates(List<Integer> ints)
+	{
+		List<Integer> duplicates = new ArrayList<Integer>();
+		for (int idx1 = 0; idx1 < ints.size(); idx1++)
+		{
+			for (int idx2 = 0; idx2 < ints.size(); idx2++)
+			{
+				if (ints.get(idx1) == ints.get(idx2))
+				{
+					duplicates.add(ints.get(idx1));
+				}
+			}
+		}
+		return duplicates;
 	}
 }

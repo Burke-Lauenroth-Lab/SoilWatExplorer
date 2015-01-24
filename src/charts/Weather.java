@@ -396,7 +396,7 @@ public class Weather extends JFrame implements ActionListener, ItemListener {
         deviationrenderer.setSeriesFillPaint(1, new Color(200, 200, 255));
         xyplot.setRenderer(deviationrenderer);
         NumberAxis numberaxis = (NumberAxis)xyplot.getRangeAxis();
-        numberaxis.setAutoRangeIncludesZero(false);
+        numberaxis.setAutoRangeIncludesZero(true);
         numberaxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
         return chart;
     }

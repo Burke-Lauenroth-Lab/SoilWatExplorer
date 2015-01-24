@@ -9,8 +9,10 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JButton;
+
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowEvent;
 
 public class PROD_MONTHLY_BIOMASS extends JFrame {
 
@@ -60,7 +62,7 @@ public class PROD_MONTHLY_BIOMASS extends JFrame {
 			private static final long serialVersionUID = 1L;
 			@SuppressWarnings("rawtypes")
 			Class[] columnTypes = new Class[] {
-				String.class, Double.class, Double.class, Double.class, Object.class
+				String.class, Double.class, Double.class, Double.class, Double.class
 			};
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			public Class getColumnClass(int columnIndex) {
@@ -69,6 +71,10 @@ public class PROD_MONTHLY_BIOMASS extends JFrame {
 		});
 		table.getColumnModel().getColumn(0).setResizable(false);
 		table.getColumnModel().getColumn(3).setPreferredWidth(100);
+		table.getColumnModel().getColumn(1).setCellRenderer(new DoubleColumnRenderer());
+		table.getColumnModel().getColumn(2).setCellRenderer(new DoubleColumnRenderer());
+		table.getColumnModel().getColumn(3).setCellRenderer(new DoubleColumnRenderer());
+		table.getColumnModel().getColumn(4).setCellRenderer(new DoubleColumnRenderer());
 		contentPane.add(table, BorderLayout.NORTH);
 		contentPane.add(new JScrollPane(table));
 		
@@ -85,11 +91,20 @@ public class PROD_MONTHLY_BIOMASS extends JFrame {
 		panel_south.add(btn_save);
 		
 		JButton btn_close = new JButton("Close");
+		btn_close.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				close();
+			}
+		});
 		panel_south.add(btn_close);
 		
 		this.setTitle(Title);
 		
 		onSetValues();
+	}
+	public void close() {
+		this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
 	}
 	public void onGetValues() {
 		for(int i=0; i<12; i++) {

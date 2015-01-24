@@ -230,6 +230,8 @@ public class SITE {
 	 */
 	protected JPanel onGetPanel_site() {
 		Format format = NumberFormat.getNumberInstance();
+		((NumberFormat)format).setMaximumFractionDigits(6);
+		((NumberFormat)format).setMinimumFractionDigits(0);
 		((NumberFormat)format).setGroupingUsed(false);
 		
 		JPanel panel_site = new JPanel();

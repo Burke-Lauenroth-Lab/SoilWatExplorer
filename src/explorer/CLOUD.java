@@ -68,6 +68,18 @@ public class CLOUD {
 		});
 		table_cloud_setup.getColumnModel().getColumn(0).setResizable(false);
 		table_cloud_setup.getColumnModel().getColumn(0).setPreferredWidth(105);
+		table_cloud_setup.getColumnModel().getColumn(1).setCellRenderer(new DoubleColumnRenderer());
+		table_cloud_setup.getColumnModel().getColumn(2).setCellRenderer(new DoubleColumnRenderer());
+		table_cloud_setup.getColumnModel().getColumn(3).setCellRenderer(new DoubleColumnRenderer());
+		table_cloud_setup.getColumnModel().getColumn(4).setCellRenderer(new DoubleColumnRenderer());
+		table_cloud_setup.getColumnModel().getColumn(5).setCellRenderer(new DoubleColumnRenderer());
+		table_cloud_setup.getColumnModel().getColumn(6).setCellRenderer(new DoubleColumnRenderer());
+		table_cloud_setup.getColumnModel().getColumn(7).setCellRenderer(new DoubleColumnRenderer());
+		table_cloud_setup.getColumnModel().getColumn(8).setCellRenderer(new DoubleColumnRenderer());
+		table_cloud_setup.getColumnModel().getColumn(9).setCellRenderer(new DoubleColumnRenderer());
+		table_cloud_setup.getColumnModel().getColumn(10).setCellRenderer(new DoubleColumnRenderer());
+		table_cloud_setup.getColumnModel().getColumn(11).setCellRenderer(new DoubleColumnRenderer());
+		table_cloud_setup.getColumnModel().getColumn(12).setCellRenderer(new DoubleColumnRenderer());
 		panel_cloud.setLayout(new BoxLayout(panel_cloud, BoxLayout.X_AXIS));
 		panel_cloud.add(table_cloud_setup);
 		panel_cloud.add(new JScrollPane(table_cloud_setup));

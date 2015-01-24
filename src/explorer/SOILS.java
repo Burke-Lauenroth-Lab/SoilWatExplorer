@@ -131,12 +131,26 @@ public class SOILS {
 		table_soils.getColumnModel().getColumn(1).setResizable(false);
 		table_soils.getColumnModel().getColumn(1).setPreferredWidth(30);
 		table_soils.getColumnModel().getColumn(2).setPreferredWidth(45);
+		table_soils.getColumnModel().getColumn(2).setCellRenderer(new IntegerColumnRenderer());
 		table_soils.getColumnModel().getColumn(3).setPreferredWidth(55);
+		table_soils.getColumnModel().getColumn(3).setCellRenderer(new DoubleColumnRenderer());
 		table_soils.getColumnModel().getColumn(4).setPreferredWidth(100);
+		table_soils.getColumnModel().getColumn(4).setCellRenderer(new DoubleColumnRenderer());
 		table_soils.getColumnModel().getColumn(5).setPreferredWidth(50);
+		table_soils.getColumnModel().getColumn(5).setCellRenderer(new DoubleColumnRenderer());
+		table_soils.getColumnModel().getColumn(6).setCellRenderer(new DoubleColumnRenderer());
+		table_soils.getColumnModel().getColumn(7).setCellRenderer(new DoubleColumnRenderer());
+		table_soils.getColumnModel().getColumn(8).setCellRenderer(new DoubleColumnRenderer());
+		table_soils.getColumnModel().getColumn(9).setCellRenderer(new DoubleColumnRenderer());
 		table_soils.getColumnModel().getColumn(10).setPreferredWidth(65);
+		table_soils.getColumnModel().getColumn(10).setCellRenderer(new DoubleColumnRenderer());
 		table_soils.getColumnModel().getColumn(11).setPreferredWidth(65);
+		table_soils.getColumnModel().getColumn(11).setCellRenderer(new DoubleColumnRenderer());
 		table_soils.getColumnModel().getColumn(12).setPreferredWidth(65);
+		table_soils.getColumnModel().getColumn(12).setCellRenderer(new DoubleColumnRenderer());
+		table_soils.getColumnModel().getColumn(13).setCellRenderer(new DoubleColumnRenderer());
+		
+		
 		panel_soils.add(table_soils);
 		panel_soils.add(new JScrollPane(table_soils));
 		

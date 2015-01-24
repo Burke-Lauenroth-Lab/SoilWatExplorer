@@ -195,6 +195,8 @@ public class ESTABL implements ListSelectionListener, ActionListener{
 		((NumberFormat)format_int).setGroupingUsed(false);
 		
 		Format format_double = NumberFormat.getNumberInstance();
+		((NumberFormat)format_double).setMaximumFractionDigits(6);
+		((NumberFormat)format_double).setMinimumFractionDigits(0);
 		((NumberFormat)format_double).setGroupingUsed(false);
 		
 		JPanel panel_estab = new JPanel();

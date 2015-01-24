@@ -4,6 +4,7 @@ import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
 import soilwat.SW_CONTROL;
@@ -11,6 +12,7 @@ import soilwat.SW_OUTPUT.OutKey;
 import soilwat.SW_OUTPUT.OutPeriod;
 import explorer.KeyEvent;
 import explorer.PeriodEvent;
+
 import java.awt.BorderLayout;
 
 public class ChartSelector extends JPanel implements PeriodEvent, KeyEvent {
@@ -50,7 +52,7 @@ public class ChartSelector extends JPanel implements PeriodEvent, KeyEvent {
 	private OutPeriod period;
 	private SW_CONTROL control;
 	
-	public ChartSelector(SW_CONTROL control, OutPeriod period, OutKey key, soilwat.InputData.OutputIn out) {
+	public ChartSelector(SW_CONTROL control, OutPeriod period, OutKey key, soilwat.InputData.OutputIn out, JComboBox<String> typeSelector) {
 		this.control = control;
 		this.period = period;
 		setLayout(new BorderLayout(0, 0));
@@ -148,10 +150,12 @@ public class ChartSelector extends JPanel implements PeriodEvent, KeyEvent {
 		
 		if(out.outputs[OutKey.eSW_Transp.idx()].use) {
 			panel_TRANSP = new OUT_TypeLayer(this.control, OutKey.eSW_Transp, period==null?out.outputs[OutKey.eSW_Transp.idx()].periodColumn:period);
+			typeSelector.addItemListener(panel_TRANSP);
 			this.addPeriodEventListener(panel_TRANSP);
 		}
 		if(out.outputs[OutKey.eSW_HydRed.idx()].use) {
 			panel_HYDRED = new OUT_TypeLayer(this.control, OutKey.eSW_HydRed, period==null?out.outputs[OutKey.eSW_HydRed.idx()].periodColumn:period);
+			typeSelector.addItemListener(panel_HYDRED);
 			this.addPeriodEventListener(panel_HYDRED);
 		}
 		

@@ -85,10 +85,10 @@ public class PROD implements ActionListener{
 		prodIn.albedo.forb = ((Number)formattedTextField_albedo_forb.getValue()).doubleValue();
 		prodIn.albedo.bareGround = ((Number)formattedTextField_albedo_bareGround.getValue()).doubleValue();
 		
-		prodIn.albedo.grass = ((Number)formattedTextField_cover_grass.getValue()).doubleValue();
-		prodIn.albedo.shrub = ((Number)formattedTextField_cover_shrub.getValue()).doubleValue();
-		prodIn.albedo.tree = ((Number)formattedTextField_cover_tree.getValue()).doubleValue();
-		prodIn.albedo.forb = ((Number)formattedTextField_cover_forb.getValue()).doubleValue();
+		prodIn.coverPercent.grass = ((Number)formattedTextField_cover_grass.getValue()).doubleValue();
+		prodIn.coverPercent.shrub = ((Number)formattedTextField_cover_shrub.getValue()).doubleValue();
+		prodIn.coverPercent.tree = ((Number)formattedTextField_cover_tree.getValue()).doubleValue();
+		prodIn.coverPercent.forb = ((Number)formattedTextField_cover_forb.getValue()).doubleValue();
 		
 		prodIn.esTpart.grass = ((Number)formattedTextField_estpart_grass.getValue()).doubleValue();
 		prodIn.esTpart.shrub = ((Number)formattedTextField_estpart_shrub.getValue()).doubleValue();
@@ -216,10 +216,10 @@ public class PROD implements ActionListener{
 		formattedTextField_albedo_forb.setValue(prodIn.albedo.forb);
 		formattedTextField_albedo_bareGround.setValue(prodIn.albedo.bareGround);
 		
-		formattedTextField_cover_grass.setValue(prodIn.albedo.grass);
-		formattedTextField_cover_shrub.setValue(prodIn.albedo.shrub);
-		formattedTextField_cover_tree.setValue(prodIn.albedo.tree);
-		formattedTextField_cover_forb.setValue(prodIn.albedo.forb);
+		formattedTextField_cover_grass.setValue(prodIn.coverPercent.grass);
+		formattedTextField_cover_shrub.setValue(prodIn.coverPercent.shrub);
+		formattedTextField_cover_tree.setValue(prodIn.coverPercent.tree);
+		formattedTextField_cover_forb.setValue(prodIn.coverPercent.forb);
 		
 		formattedTextField_estpart_grass.setValue(prodIn.esTpart.grass);
 		formattedTextField_estpart_shrub.setValue(prodIn.esTpart.shrub);
@@ -339,6 +339,8 @@ public class PROD implements ActionListener{
 	 */
 	public JPanel onGetPanel_prod() {
 		Format format = NumberFormat.getNumberInstance();
+		((NumberFormat)format).setMaximumFractionDigits(6);
+		((NumberFormat)format).setMinimumFractionDigits(0);
 		((NumberFormat)format).setGroupingUsed(false);
 		
 		JPanel panel_prod = new JPanel();
@@ -488,7 +490,7 @@ public class PROD implements ActionListener{
 			private static final long serialVersionUID = 3189294466837951919L;
 			@SuppressWarnings("rawtypes")
 			Class[] columnTypes = new Class[] {
-				String.class, Float.class, Float.class, Float.class, Float.class
+				String.class, Double.class, Double.class, Double.class, Double.class
 			};
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			public Class getColumnClass(int columnIndex) {
@@ -504,6 +506,10 @@ public class PROD implements ActionListener{
 		table_prod_canopy.getColumnModel().getColumn(0).setResizable(false);
 		table_prod_canopy.getColumnModel().getColumn(0).setPreferredWidth(105);
 		table_prod_canopy.getColumnModel().getColumn(0).setMaxWidth(105);
+		table_prod_canopy.getColumnModel().getColumn(1).setCellRenderer(new DoubleColumnRenderer());
+		table_prod_canopy.getColumnModel().getColumn(2).setCellRenderer(new DoubleColumnRenderer());
+		table_prod_canopy.getColumnModel().getColumn(3).setCellRenderer(new DoubleColumnRenderer());
+		table_prod_canopy.getColumnModel().getColumn(4).setCellRenderer(new DoubleColumnRenderer());
 		panel_Canopy.setLayout(new BoxLayout(panel_Canopy, BoxLayout.PAGE_AXIS));
 		
 		JLabel lblCanopyHeightcm = new JLabel("Canopy Height (cm) Parameters");
@@ -534,7 +540,7 @@ public class PROD implements ActionListener{
 			private static final long serialVersionUID = -5953329468888953419L;
 			@SuppressWarnings("rawtypes")
 			Class[] columnTypes = new Class[] {
-				String.class, Float.class, Float.class, Float.class, Float.class
+				String.class, Double.class, Double.class, Double.class, Double.class
 			};
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			public Class getColumnClass(int columnIndex) {
@@ -550,6 +556,10 @@ public class PROD implements ActionListener{
 		table_prod_VegInterception.getColumnModel().getColumn(0).setResizable(false);
 		table_prod_VegInterception.getColumnModel().getColumn(0).setPreferredWidth(35);
 		table_prod_VegInterception.getColumnModel().getColumn(0).setMaxWidth(35);
+		table_prod_VegInterception.getColumnModel().getColumn(1).setCellRenderer(new DoubleColumnRenderer());
+		table_prod_VegInterception.getColumnModel().getColumn(2).setCellRenderer(new DoubleColumnRenderer());
+		table_prod_VegInterception.getColumnModel().getColumn(3).setCellRenderer(new DoubleColumnRenderer());
+		table_prod_VegInterception.getColumnModel().getColumn(4).setCellRenderer(new DoubleColumnRenderer());
 		
 		JLabel lblVegInterception = new JLabel("Vegetation Interception Parameters");
 		lblVegInterception.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -579,7 +589,7 @@ public class PROD implements ActionListener{
 			private static final long serialVersionUID = -2042673330597335391L;
 			@SuppressWarnings("rawtypes")
 			Class[] columnTypes = new Class[] {
-				String.class, Float.class, Float.class, Float.class, Float.class
+				String.class, Double.class, Double.class, Double.class, Double.class
 			};
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			public Class getColumnClass(int columnIndex) {
@@ -589,6 +599,10 @@ public class PROD implements ActionListener{
 		table_prod_LitterInterception.getColumnModel().getColumn(0).setResizable(false);
 		table_prod_LitterInterception.getColumnModel().getColumn(0).setPreferredWidth(35);
 		table_prod_LitterInterception.getColumnModel().getColumn(0).setMaxWidth(35);
+		table_prod_LitterInterception.getColumnModel().getColumn(1).setCellRenderer(new DoubleColumnRenderer());
+		table_prod_LitterInterception.getColumnModel().getColumn(2).setCellRenderer(new DoubleColumnRenderer());
+		table_prod_LitterInterception.getColumnModel().getColumn(3).setCellRenderer(new DoubleColumnRenderer());
+		table_prod_LitterInterception.getColumnModel().getColumn(4).setCellRenderer(new DoubleColumnRenderer());
 		
 		JLabel lblLitterInterception = new JLabel("Litter Interception Parameters");
 		lblLitterInterception.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -640,6 +654,9 @@ public class PROD implements ActionListener{
 		table_prod_hydraulicRedist.getColumnModel().getColumn(0).setMaxWidth(60);
 		table_prod_hydraulicRedist.getColumnModel().getColumn(1).setPreferredWidth(35);
 		table_prod_hydraulicRedist.getColumnModel().getColumn(2).setPreferredWidth(95);
+		table_prod_hydraulicRedist.getColumnModel().getColumn(2).setCellRenderer(new DoubleColumnRenderer());
+		table_prod_hydraulicRedist.getColumnModel().getColumn(3).setCellRenderer(new DoubleColumnRenderer());
+		table_prod_hydraulicRedist.getColumnModel().getColumn(4).setCellRenderer(new DoubleColumnRenderer());
 		panel_hydraulicRedist.add(table_prod_hydraulicRedist);
 		panel_hydraulicRedist.add(new JScrollPane(table_prod_hydraulicRedist));
 		
@@ -895,6 +912,10 @@ public class PROD implements ActionListener{
 		table_prod_shade.getColumnModel().getColumn(0).setResizable(false);
 		table_prod_shade.getColumnModel().getColumn(0).setPreferredWidth(105);
 		table_prod_shade.getColumnModel().getColumn(0).setMaxWidth(105);
+		table_prod_shade.getColumnModel().getColumn(1).setCellRenderer(new DoubleColumnRenderer());
+		table_prod_shade.getColumnModel().getColumn(2).setCellRenderer(new DoubleColumnRenderer());
+		table_prod_shade.getColumnModel().getColumn(3).setCellRenderer(new DoubleColumnRenderer());
+		table_prod_shade.getColumnModel().getColumn(4).setCellRenderer(new DoubleColumnRenderer());
 		panel_Shade.add(table_prod_shade);
 		JScrollPane scrollPane = new JScrollPane(table_prod_shade);
 		panel_Shade.add(scrollPane);

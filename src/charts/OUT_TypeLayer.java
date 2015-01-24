@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
@@ -43,7 +42,9 @@ public class OUT_TypeLayer extends OutputChart implements ActionListener, ItemLi
 	private XYSeriesCollection xyseriescollection;
 	private List<JCheckBox> chbx_layers = new ArrayList<JCheckBox>();
 	private List<XYSeries> series = new ArrayList<XYSeries>();
-	private JComboBox<String> cmbx_Type = new JComboBox<String>();
+	//private JComboBox<String> cmbx_Type = new JComboBox<String>();
+	private static String[] typeNames = new String[] {"Total","Trees","Shrubs","Forbs","Grasses"};
+	private int type;
 
 	public OUT_TypeLayer(SW_CONTROL control, OutKey key, OutPeriod p){
 		super(control, control.onGet_Timing(), p);
@@ -52,12 +53,12 @@ public class OUT_TypeLayer extends OutputChart implements ActionListener, ItemLi
 		
 		JPanel temp = new JPanel();
 		temp.setLayout(new BoxLayout(temp, BoxLayout.PAGE_AXIS));
-		cmbx_Type.setModel(new DefaultComboBoxModel<String>(new String[] {"Total","Trees","Shrubs","Forbs","Grasses"}));
-		cmbx_Type.setSelectedIndex(0);
-		cmbx_Type.addItemListener(this);
+		//cmbx_Type.setModel(new DefaultComboBoxModel<String>(new String[] {"Total","Trees","Shrubs","Forbs","Grasses"}));
+		//cmbx_Type.setSelectedIndex(0);
+		//cmbx_Type.addItemListener(this);
 		
 		JPanel row0 = new JPanel();
-		row0.add(cmbx_Type);
+		//row0.add(cmbx_Type);
 		temp.add(row0);
 		
 		JPanel row1 = new JPanel();
@@ -96,12 +97,12 @@ public class OUT_TypeLayer extends OutputChart implements ActionListener, ItemLi
 	}
 	
 	private XYDataset createDatasetTemp() {
-		int type = cmbx_Type.getSelectedIndex();
+		//int type = cmbx_Type.getSelectedIndex();
 		xyseriescollection = new XYSeriesCollection();
 		series.clear();
 		int lyrs = (int)(control.onGet_nColumns(key)/5); 
 		for(int lyr=0; lyr<lyrs; lyr++) {
-			XYSeries temp = getLayer(lyr, type);
+			XYSeries temp = getLayer(lyr, this.type);
 			series.add(temp);
 			xyseriescollection.addSeries(temp);
 		}
@@ -154,7 +155,7 @@ public class OUT_TypeLayer extends OutputChart implements ActionListener, ItemLi
     }
 	
 	public JPanel createChartPanel() {
-		String Title = this.key.name()+cmbx_Type.getSelectedItem().toString();
+		String Title = this.key.name()+typeNames[this.type];
 		JFreeChart jfreechart = createChart(createDatasetTemp(), Title);
 		return new ChartPanel(jfreechart);
 	}
@@ -190,12 +191,12 @@ public class OUT_TypeLayer extends OutputChart implements ActionListener, ItemLi
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void itemStateChanged(ItemEvent e) {
 		Object src = e.getSource();
-		if(src == cmbx_Type) {
-			updateChart();
-		}
+		this.type = ((JComboBox<String>) src).getSelectedIndex();
+		updateChart();
 	}
 	
 }

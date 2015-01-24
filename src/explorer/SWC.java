@@ -151,6 +151,10 @@ public class SWC implements ListSelectionListener, ActionListener, PropertyChang
 		if(list_years.getModel().getSize() == 0 && list_years.getSelectedIndex() == -1) {
 			table_swc_historyInput.removeAll();
 			table_swc_historyInput.setModel(getModel(this.nLayers));
+			table_swc_historyInput.getColumnModel().getColumn(0).setResizable(false);
+			table_swc_historyInput.getColumnModel().getColumn(0).setCellRenderer(new IntegerColumnRenderer());
+			table_swc_historyInput.getColumnModel().getColumn(1).setCellRenderer(new DoubleColumnRenderer());
+			table_swc_historyInput.getColumnModel().getColumn(2).setCellRenderer(new DoubleColumnRenderer());
 			for(int i=0; i<this.nLayers; i++) {
 				table_swc_historyInput.setValueAt(i+1, i, 0);
 				table_swc_historyInput.setValueAt(0.0, i, 1);
@@ -179,6 +183,10 @@ public class SWC implements ListSelectionListener, ActionListener, PropertyChang
 		hist.setCurrentYear(Integer.parseInt(list_years.getSelectedValue()));
 		table_swc_historyInput.removeAll();
 		table_swc_historyInput.setModel(getModel(this.nLayers));
+		table_swc_historyInput.getColumnModel().getColumn(0).setResizable(false);
+		table_swc_historyInput.getColumnModel().getColumn(0).setCellRenderer(new IntegerColumnRenderer());
+		table_swc_historyInput.getColumnModel().getColumn(1).setCellRenderer(new DoubleColumnRenderer());
+		table_swc_historyInput.getColumnModel().getColumn(2).setCellRenderer(new DoubleColumnRenderer());
 		int doy = 0;
 		if(list_doy.getModel().getSize() != 0 && list_doy.getSelectedIndex() != -1) {
 			doy = Integer.parseInt(list_doy.getSelectedValue())-1;
@@ -328,6 +336,9 @@ public class SWC implements ListSelectionListener, ActionListener, PropertyChang
 		table_swc_historyInput = new JTable();
 		table_swc_historyInput.setModel(getModel(this.nLayers));
 		table_swc_historyInput.getColumnModel().getColumn(0).setResizable(false);
+		table_swc_historyInput.getColumnModel().getColumn(0).setCellRenderer(new IntegerColumnRenderer());
+		table_swc_historyInput.getColumnModel().getColumn(1).setCellRenderer(new DoubleColumnRenderer());
+		table_swc_historyInput.getColumnModel().getColumn(2).setCellRenderer(new DoubleColumnRenderer());
 		panel_swc_right.setLayout(new BoxLayout(panel_swc_right, BoxLayout.X_AXIS));
 		panel_swc_right.add(table_swc_historyInput);
 		panel_swc_right.add(new JScrollPane(table_swc_historyInput));

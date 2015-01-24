@@ -99,6 +99,7 @@ public class OUTDATA extends JPanel implements ListSelectionListener, ItemListen
 	private JList<SW_OUTPUT.OUTPUT_INPUT_DATA> list_outData_KeySelect;
 	private DefaultListModel<SW_OUTPUT.OUTPUT_INPUT_DATA> key_model = new DefaultListModel<SW_OUTPUT.OUTPUT_INPUT_DATA>();
 	private JComboBox<SW_OUTPUT.OutPeriod> comboBox_periodSelector;
+	private JComboBox<String> cmbx_Type = new JComboBox<String>();
 	private DefaultComboBoxModel<SW_OUTPUT.OutPeriod> period_model = new DefaultComboBoxModel<SW_OUTPUT.OutPeriod>();
 	private JScrollPane scrollPane_2;
 	
@@ -168,9 +169,15 @@ public class OUTDATA extends JPanel implements ListSelectionListener, ItemListen
 		panel_side.add(comboBox_periodSelector);
 		comboBox_periodSelector.setModel(period_model);
 		comboBox_periodSelector.setSelectedIndex(0);
-		if(usePeriodSelector) {
+		if(!usePeriodSelector) {
 			comboBox_periodSelector.setVisible(false);
 		}
+		
+		cmbx_Type.setModel(new DefaultComboBoxModel<String>(new String[] {"Total","Trees","Shrubs","Forbs","Grasses"}));
+		panel_side.add(cmbx_Type);
+		cmbx_Type.setSelectedIndex(0);
+		cmbx_Type.addItemListener(this);
+		cmbx_Type.setVisible(false);
 		
 		onSetTable();
 		
@@ -193,7 +200,7 @@ public class OUTDATA extends JPanel implements ListSelectionListener, ItemListen
 		//listeners
 		list_outData_KeySelect.addListSelectionListener(this);
 		
-		panel_chart = new ChartSelector(control, period, key, out);
+		panel_chart = new ChartSelector(control, period, key, out, cmbx_Type);
 		add(panel_chart);
 		
 		pb.setValue(pb.getValue()+15);
@@ -208,28 +215,56 @@ public class OUTDATA extends JPanel implements ListSelectionListener, ItemListen
 		
 		int rows = control.onGet_Timing().get_nRows(period);
 		int columns = control.onGet_Timing().get_nColumns(period);
-		columns+=control.onGet_nColumns(key);
+		Object[][] data;
+		String[] names;
 		
-		Object[][] data = new Object[rows][columns];
-		for(int i=0; i<rows; i++) {
-			for(int j=0; j<columns; j++) {
-				if(j<control.onGet_Timing().get_nColumns(period))
-					data[i][j] = new Integer(control.onGet_Timing().timingValue(period, i, j));
+		if(key == OutKey.eSW_Transp || key == OutKey.eSW_HydRed) {
+			columns += (control.onGet_nColumns(key)/5);
+			data = new Object[rows][columns];
+			for (int i = 0; i < rows; i++) {
+				for (int j = 0; j < columns; j++) {
+					if (j < control.onGet_Timing().get_nColumns(period))
+						data[i][j] = new Integer(control.onGet_Timing().timingValue(period, i, j));
+					else
+						data[i][j] = new Double(control.onGetOutput(key, period)[i][j - control.onGet_Timing().get_nColumns(period) + cmbx_Type.getSelectedIndex()*(control.onGet_nColumns(key)/5)]);
+				}
+			}
+			String[] time_names = control.onGet_Timing().getColumnNames(period);
+			String[] data_names = control.onGet_OutputColumnNames(key);
+			names = new String[time_names.length + (control.onGet_nColumns(key)/5)];
+			for (int i = 0; i < names.length; i++) {
+				if (i < time_names.length)
+					names[i] = time_names[i];
 				else
-					data[i][j] = new Double(control.onGetOutput(key, period)[i][j-control.onGet_Timing().get_nColumns(period)]);
+					names[i] = data_names[i - time_names.length + cmbx_Type.getSelectedIndex()*(control.onGet_nColumns(key)/5)];
+			}
+		} else {
+			columns+=control.onGet_nColumns(key);
+			data = new Object[rows][columns];
+			for (int i = 0; i < rows; i++) {
+				for (int j = 0; j < columns; j++) {
+					if (j < control.onGet_Timing().get_nColumns(period))
+						data[i][j] = new Integer(control.onGet_Timing()
+								.timingValue(period, i, j));
+					else
+						data[i][j] = new Double(
+								control.onGetOutput(key, period)[i][j
+										- control.onGet_Timing().get_nColumns(
+												period)]);
+				}
+			}
+			String[] time_names = control.onGet_Timing().getColumnNames(period);
+			String[] data_names = control.onGet_OutputColumnNames(key);
+			names = new String[time_names.length + data_names.length];
+			for (int i = 0; i < names.length; i++) {
+				if (i < time_names.length)
+					names[i] = time_names[i];
+				else
+					names[i] = data_names[i - time_names.length];
 			}
 		}
-		String[] time_names = control.onGet_Timing().getColumnNames(period);
-		String[] data_names = control.onGet_OutputColumnNames(key);
-		String[] names = new String[time_names.length+data_names.length];
-		for(int i=0; i<names.length; i++) {
-			if(i < time_names.length)
-				names[i] = time_names[i];
-			else
-				names[i] = data_names[i-time_names.length];
-		}
 		table_data = new JTable(data, names);
-		if(scrollPane_2 != null) {
+		if (scrollPane_2 != null) {
 			scrollPane_2.getViewport().remove(0);
 			scrollPane_2.setViewportView(table_data);
 			scrollPane_2.revalidate();
@@ -243,6 +278,11 @@ public class OUTDATA extends JPanel implements ListSelectionListener, ItemListen
 			@SuppressWarnings("unchecked")
 			JList<SW_OUTPUT.OUTPUT_INPUT_DATA> keySelect = (JList<SW_OUTPUT.OUTPUT_INPUT_DATA>)src;
 			OutKey key = keySelect.getSelectedValue().mykey;
+			if(key == OutKey.eSW_Transp || key == OutKey.eSW_HydRed) {
+				this.cmbx_Type.setVisible(true);
+			} else {
+				this.cmbx_Type.setVisible(false);
+			}
 			//1. reset the period combobox
 			if(usePeriodColumn) {//Only if we are using per key period
 				period_model.removeAllElements();
@@ -264,6 +304,10 @@ public class OUTDATA extends JPanel implements ListSelectionListener, ItemListen
 		if(src==comboBox_periodSelector) {
 			onSetTable();
 			periodEvent.periodChange((SW_OUTPUT.OutPeriod)comboBox_periodSelector.getSelectedItem());
+			this.revalidate();
+			this.repaint();
+		} else if(src==cmbx_Type) {
+			onSetTable();
 			this.revalidate();
 			this.repaint();
 		}

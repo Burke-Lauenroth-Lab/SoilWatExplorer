@@ -114,8 +114,10 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 			weatherSetupIn.scale_transmissivity[i] = ((Number)table_weather_monthlyScalingParam.getValueAt(i, 7)).doubleValue();
 		}
 		//Save Current Year
-		int year = Integer.parseInt(list_historyYears.getSelectedValue());
-		onGet_HIST(year);
+		if(list_historyYears.getModel().getSize() != 0) {
+			int year = Integer.parseInt(list_historyYears.getSelectedValue());
+			onGet_HIST(year);
+		}
 	}
 	
 	public void onSetValues() {
@@ -123,6 +125,11 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 		formattedTextField_pct_snowdrift.setValue(weatherSetupIn.pct_snowdrift);
 		formattedTextField_pct_snowRunoff.setValue(weatherSetupIn.pct_snowRunoff);
 		chckbx_weather_useMarkov.setSelected(weatherSetupIn.use_markov);
+		if(weatherSetupIn.use_markov) {
+			//TODO show tab
+		} else {
+			//TODO hide tab
+		}
 		formattedTextField_days_in_runavg.setValue(weatherSetupIn.days_in_runavg);
 		
 		for(int i=0; i<12; i++) {
@@ -138,14 +145,27 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 		onReset_list();
 	}
 	
-	private void onReset_list() {
+	public void onReset_list() {
 		this.list_index = -1;
 		list_historyYears.removeAll();
 		list_historyYears.setListData(weatherHist.getHistYearsString());
 		list_historyYears.setSelectedIndex(0);
 		
+		Integer year = null;
+		if(this.weatherHist.data())
+			year = new Integer(Collections.max(this.weatherHist.getHistYearsInteger())+1);
+		else
+			year = new Integer(1950);
+		formattedTextField_insertYear.setValue(year);
+		
 		if(list_historyYears.getModel().getSize() == 0 && list_historyYears.getSelectedIndex() == -1) {
 			table_weather_History.setModel(getModel(365));
+			table_weather_History.getColumnModel().getColumn(0).setResizable(false);
+			table_weather_History.getColumnModel().getColumn(0).setPreferredWidth(35);
+			table_weather_History.getColumnModel().getColumn(0).setCellRenderer(new IntegerColumnRenderer());
+			table_weather_History.getColumnModel().getColumn(1).setCellRenderer(new DoubleColumnRenderer());
+			table_weather_History.getColumnModel().getColumn(2).setCellRenderer(new DoubleColumnRenderer());
+			table_weather_History.getColumnModel().getColumn(3).setCellRenderer(new DoubleColumnRenderer());
 			for(int i=0; i<365; i++) {
 				table_weather_History.setValueAt(i+1, i, 0);
 				table_weather_History.setValueAt(0.0, i, 1);
@@ -173,6 +193,12 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 	private void onSet_HIST() {
 		weatherHist.setCurrentYear(Integer.parseInt(list_historyYears.getSelectedValue()));
 		table_weather_History.setModel(getModel(weatherHist.getDays()));
+		table_weather_History.getColumnModel().getColumn(0).setResizable(false);
+		table_weather_History.getColumnModel().getColumn(0).setPreferredWidth(35);
+		table_weather_History.getColumnModel().getColumn(0).setCellRenderer(new IntegerColumnRenderer());
+		table_weather_History.getColumnModel().getColumn(1).setCellRenderer(new DoubleColumnRenderer());
+		table_weather_History.getColumnModel().getColumn(2).setCellRenderer(new DoubleColumnRenderer());
+		table_weather_History.getColumnModel().getColumn(3).setCellRenderer(new DoubleColumnRenderer());
 		for(int i=0; i<weatherHist.getDays(); i++) {
 			table_weather_History.setValueAt(i+1, i, 0);
 			table_weather_History.setValueAt(weatherHist.get_temp_max(i), i, 1);
@@ -242,6 +268,7 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 		panel_weather_setup.add(lbl_weather_percSnowMelt, "2, 7");
 		
 		chckbx_weather_useMarkov = new JCheckBox("");
+		chckbx_weather_useMarkov.addActionListener(this);
 		panel_weather_setup.add(chckbx_weather_useMarkov, "1, 9, right, default");
 		
 		JLabel lbl_weather_UseMarkovProcess = new JLabel("Use Markov process for missing weather.");
@@ -318,6 +345,13 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 		table_weather_monthlyScalingParam.getColumnModel().getColumn(5).setPreferredWidth(50);
 		table_weather_monthlyScalingParam.getColumnModel().getColumn(6).setPreferredWidth(125);
 		table_weather_monthlyScalingParam.getColumnModel().getColumn(7).setPreferredWidth(95);
+		table_weather_monthlyScalingParam.getColumnModel().getColumn(1).setCellRenderer(new DoubleColumnRenderer());
+		table_weather_monthlyScalingParam.getColumnModel().getColumn(2).setCellRenderer(new DoubleColumnRenderer());
+		table_weather_monthlyScalingParam.getColumnModel().getColumn(3).setCellRenderer(new DoubleColumnRenderer());
+		table_weather_monthlyScalingParam.getColumnModel().getColumn(4).setCellRenderer(new DoubleColumnRenderer());
+		table_weather_monthlyScalingParam.getColumnModel().getColumn(5).setCellRenderer(new DoubleColumnRenderer());
+		table_weather_monthlyScalingParam.getColumnModel().getColumn(6).setCellRenderer(new DoubleColumnRenderer());
+		table_weather_monthlyScalingParam.getColumnModel().getColumn(7).setCellRenderer(new DoubleColumnRenderer());
 		
 		JLabel lbl_weather_skyCover = new JLabel("SkyCover = additive for mean monthly sky cover [%]; min(100, max(0, scale + sky cover))");
 		lbl_weather_skyCover.setFont(new Font("Dialog", Font.PLAIN, 12));
@@ -703,6 +737,10 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 		table_weather_History.setModel(getModel(366));
 		table_weather_History.getColumnModel().getColumn(0).setResizable(false);
 		table_weather_History.getColumnModel().getColumn(0).setPreferredWidth(35);
+		table_weather_History.getColumnModel().getColumn(0).setCellRenderer(new IntegerColumnRenderer());
+		table_weather_History.getColumnModel().getColumn(1).setCellRenderer(new DoubleColumnRenderer());
+		table_weather_History.getColumnModel().getColumn(2).setCellRenderer(new DoubleColumnRenderer());
+		table_weather_History.getColumnModel().getColumn(3).setCellRenderer(new DoubleColumnRenderer());
 		panel_weather.add(table_weather_History);
 		panel_weather.add(new JScrollPane(table_weather_History));
 		
@@ -736,6 +774,12 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 	    		int remove = Integer.parseInt(this.list_historyYears.getSelectedValue().toString());
 	    		this.weatherHist.remove(remove);
 	    		onReset_list();
+	    	}
+	    } else if (src == chckbx_weather_useMarkov) {
+	    	if(chckbx_weather_useMarkov.isSelected()) {
+	    		//TODO show tab
+	    	} else {
+	    		//TODO hide tab
 	    	}
 	    }
 	}
@@ -1552,7 +1596,6 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 				}
 			};
 		}
-		
 		return model;
 	}
 }
