@@ -34,6 +34,8 @@ public class ProgressBar extends JPanel implements ActionListener,
 	private WeatherData data;
 	private Task task;
 	private JFrame parent;
+	private boolean climate;
+	private Converter callback;
 	final Thread exe;
 
 	public class Task extends SwingWorker<Void, Void> {
@@ -44,7 +46,10 @@ public class ProgressBar extends JPanel implements ActionListener,
 		public Void doInBackground() {
 			// Initialize progress property.
 			setProgress(0);
-			data.generateClimateTable(this, taskOutput, timeLeft);
+			if(climate)
+				data.generateClimateTable(this, taskOutput, timeLeft);
+			else
+				data.createNewDatabase(this, taskOutput, timeLeft);
 			return null;
 		}
 
@@ -63,20 +68,22 @@ public class ProgressBar extends JPanel implements ActionListener,
 			taskOutput.append("Done!\n");
 			this.setProgress(100);
 			//close
-			try {
-				wait(7);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			
+			if(exe == null)
+				callback.conversionComplete(data.getDatabasePath());
 		}
 	}
+	
+	public void register(Converter callback) {
+		this.callback = callback;
+    }
 
-	public ProgressBar(final Thread exe, WeatherData data, JFrame parent) {
+	public ProgressBar(final Thread exe, WeatherData data, JFrame parent, boolean climate) {
 		super(new BorderLayout());
 		this.data = data;
 		this.parent = parent;
 		this.exe = exe;
+		this.climate = climate;
 
 		// Create the demo's UI.
 		startButton = new JButton("Start");
@@ -137,7 +144,8 @@ public class ProgressBar extends JPanel implements ActionListener,
 			progressBar.setValue(progress);
 			if(progress == 100) {
 				this.parent.dispose();
-				exe.start();
+				if(this.exe != null)
+					exe.start();
 			}
 			//taskOutput.append(String.format("Completed %d%% of task.\n", task.getProgress()));
 		}
@@ -147,7 +155,7 @@ public class ProgressBar extends JPanel implements ActionListener,
 	 * Create the GUI and show it. As with all GUI code, this must run on the
 	 * event-dispatching thread.
 	 */
-	public static void createAndShowGUI(final Thread exe, WeatherData data) {
+	public static ProgressBar createAndShowGUI(final Thread exe, WeatherData data, boolean climate) {
 		// Create and set up the window.
 		final JFrame frame = new JFrame("ProgressBarDemo");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -155,17 +163,21 @@ public class ProgressBar extends JPanel implements ActionListener,
 		frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent ev) {
                 frame.dispose();
-                exe.start();
+                if(exe != null)
+                	exe.start();
             }
         });
 		
 		// Create and set up the content pane.
-		JComponent newContentPane = new ProgressBar(exe, data, frame);
+		ProgressBar b = new ProgressBar(exe, data, frame, climate);
+		JComponent newContentPane = b;
 		newContentPane.setOpaque(true); // content panes must be opaque
 		frame.setContentPane(newContentPane);
 
 		// Display the window.
 		frame.pack();
 		frame.setVisible(true);
+		
+		return b;
 	}
 }

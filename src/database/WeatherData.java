@@ -2,7 +2,11 @@ package database;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -11,12 +15,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
+import java.util.zip.InflaterOutputStream;
 
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 
 import org.openstreetmap.gui.jmapviewer.Coordinate;
@@ -39,10 +48,16 @@ public class WeatherData {
 	
 	private Path weatherDatabase;
 	private Connection connection = null;
-	private PreparedStatement preparedStatement;
+	private Connection connection2 = null;
+	private PreparedStatement insertData;
+	private PreparedStatement insertClimate;
+	private PreparedStatement insertSites;
+	private PreparedStatement insertScenarios;
 	//private soilwat.SW_WEATHER_HISTORY hist;
 	
 	public class YearData {
+		NumberFormat dFormatTwo = new DecimalFormat("#.##");
+		
 		public int id;
 		public int scenario;
 		public int year;
@@ -50,6 +65,15 @@ public class WeatherData {
 		public double[] Tmax;
 		public double[] Tmin;
 		public double[] ppt;
+		
+		public String toString() {
+			String out = new String();
+			for(int i=0; i<days; i++) {
+				out += dFormatTwo.format(Tmax[i]) + "," + dFormatTwo.format(Tmin[i]) + "," + dFormatTwo.format(ppt[i]) + "\n";
+			}
+			out+=";";
+			return out;
+		}
 	}
 	
 	private List<MapMarkerDot> sites = new ArrayList<MapMarkerDot>();
@@ -99,8 +123,300 @@ public class WeatherData {
 	      System.err.println(e.getMessage());
 	    }
 	}
+	
+	public Path getDatabasePath() {
+		return this.weatherDatabase;
+	}
+	
+	public Connection getConnection() {
+		return this.connection;
+	}
+	
+	public byte[] compresseString(String str) {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		DeflaterOutputStream gzip = new DeflaterOutputStream(out);
+		try {
+			out.reset();
+			gzip.write(str.getBytes(StandardCharsets.US_ASCII));
+			gzip.finish();
+			gzip.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return out.toByteArray();
+	}
+	
+	public String uncompressBytes(byte[] data) {
+		//write some initial stuff to the buffer and then add data
+		ByteArrayOutputStream in = new ByteArrayOutputStream();
+		DeflaterOutputStream dgzip = new DeflaterOutputStream(in);
+		try {
+			dgzip.flush();
+			in.write(data);
+			in.flush();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		InflaterOutputStream gzip = new InflaterOutputStream(out);
+		try {
+			gzip.write(in.toByteArray());
+			gzip.finish();
+			gzip.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return new String(out.toByteArray());
+	}
+	
+	public void createTableWeatherData(Connection con) {
+		String weatherData = "CREATE TABLE \"WeatherData\" (\"Site_id\" INT NOT NULL, \"Scenario\" INT NOT NULL, \"StartYear\" INT NOT NULL, \"EndYear\" INT NOT NULL, \"data\" BLOB, PRIMARY KEY (\"Site_id\", \"Scenario\"));";
+		try {
+			Statement statement = con.createStatement();
+			statement.setQueryTimeout(30);
+			statement.executeUpdate(weatherData);
+			statement.close();
+		} catch(SQLException e) {
+	        System.err.println(e.getMessage());
+	    }
+	}
+	
+	public void createTableVersion(Connection con) {
+		String version = "CREATE TABLE \"Version\" (\"Version\" integer);";
+		try {
+			Statement statement = con.createStatement();
+			statement.setQueryTimeout(30);
+			statement.executeUpdate(version);
+			statement.executeUpdate("INSERT INTO Version (Version) VALUES (1);");
+			statement.close();
+		} catch(SQLException e) {
+	        System.err.println(e.getMessage());
+	    }
+	}
+	
+	public void createTableSites(Connection con) {
+		String sites = "CREATE TABLE \"Sites\" (\"Site_id\" integer PRIMARY KEY, \"Latitude\" REAL, \"Longitude\" REAL, \"Label\" TEXT);";
+		try {
+			Statement statement = con.createStatement();
+			statement.setQueryTimeout(30);
+			statement.executeUpdate(sites);
+			statement.close();
+		} catch(SQLException e) {
+	        System.err.println(e.getMessage());
+	    }
+	}
+	
+	public void createTableScenarios(Connection con) {
+		String scenarios = "CREATE TABLE \"Scenarios\" (\"id\" integer PRIMARY KEY, \"Scenario\" TEXT);";
+		try {
+			Statement statement = con.createStatement();
+			statement.setQueryTimeout(30);
+			statement.executeUpdate(scenarios);
+			statement.close();
+		} catch(SQLException e) {
+	        System.err.println(e.getMessage());
+	    }
+	}
+	
+	public boolean createTableClimate(Connection con) {
+		String columns = "MAT_C REAL,MAP_cm REAL," +
+				"MMTemp_C_m1 REAL,MMTemp_C_m2 REAL,MMTemp_C_m3 REAL,MMTemp_C_m4 REAL,MMTemp_C_m5 REAL,MMTemp_C_m6 REAL,MMTemp_C_m7 REAL,MMTemp_C_m8 REAL,MMTemp_C_m9 REAL,MMTemp_C_m10 REAL,MMTemp_C_m11 REAL,MMTemp_C_m12 REAL," +
+				"MMPPT_C_m1 REAL,MMPPT_C_m2 REAL,MMPPT_C_m3 REAL,MMPPT_C_m4 REAL,MMPPT_C_m5 REAL,MMPPT_C_m6 REAL,MMPPT_C_m7 REAL,MMPPT_C_m8 REAL,MMPPT_C_m9 REAL,MMPPT_C_m10 REAL,MMPPT_C_m11 REAL,MMPPT_C_m12 REAL," +
+				"ClimatePerturbations_PrcpMultiplier_m1 REAL,ClimatePerturbations_PrcpMultiplier_m2 REAL,ClimatePerturbations_PrcpMultiplier_m3 REAL,ClimatePerturbations_PrcpMultiplier_m4 REAL,ClimatePerturbations_PrcpMultiplier_m5 REAL,ClimatePerturbations_PrcpMultiplier_m6 REAL,ClimatePerturbations_PrcpMultiplier_m7 REAL,ClimatePerturbations_PrcpMultiplier_m8 REAL,ClimatePerturbations_PrcpMultiplier_m9 REAL,ClimatePerturbations_PrcpMultiplier_m10 REAL,ClimatePerturbations_PrcpMultiplier_m11 REAL,ClimatePerturbations_PrcpMultiplier_m12 REAL," +
+				"ClimatePerturbations_TmaxAddand_m1 REAL,ClimatePerturbations_TmaxAddand_m2 REAL,ClimatePerturbations_TmaxAddand_m3 REAL,ClimatePerturbations_TmaxAddand_m4 REAL,ClimatePerturbations_TmaxAddand_m5 REAL,ClimatePerturbations_TmaxAddand_m6 REAL,ClimatePerturbations_TmaxAddand_m7 REAL,ClimatePerturbations_TmaxAddand_m8 REAL,ClimatePerturbations_TmaxAddand_m9 REAL,ClimatePerturbations_TmaxAddand_m10 REAL,ClimatePerturbations_TmaxAddand_m11 REAL,ClimatePerturbations_TmaxAddand_m12 REAL," +
+				"ClimatePerturbations_TminAddand_m1 REAL,ClimatePerturbations_TminAddand_m2 REAL,ClimatePerturbations_TminAddand_m3 REAL,ClimatePerturbations_TminAddand_m4 REAL,ClimatePerturbations_TminAddand_m5 REAL,ClimatePerturbations_TminAddand_m6 REAL,ClimatePerturbations_TminAddand_m7 REAL,ClimatePerturbations_TminAddand_m8 REAL,ClimatePerturbations_TminAddand_m9 REAL,ClimatePerturbations_TminAddand_m10 REAL,ClimatePerturbations_TminAddand_m11 REAL,ClimatePerturbations_TminAddand_m12 REAL,";
+		try {
+			Statement statement = con.createStatement();
+			statement.setQueryTimeout(30);
+			
+			statement.executeUpdate("CREATE TABLE climate (Site_id INTEGER, Scenario INTEGER, StartYear INTEGER, EndYear INTEGER, "+columns+" PRIMARY KEY (Site_id, Scenario));");
+			statement.close();
+			return true;
+		} catch(SQLException e) {
+			System.err.println(e.getMessage());
+			return false;
+		}
+	}
+	
+	public void insertSiteRow(int Site_id, double Latitude, double Longitude, String Label) {
+		try {
+			insertSites.setInt(1, Site_id);
+			insertSites.setDouble(2, Latitude);
+			insertSites.setDouble(3, Longitude);
+			insertSites.setString(4, Label);
+			insertSites.executeUpdate();
+			insertSites.clearParameters();
+		} catch(SQLException e) {
+			System.err.println(e.getMessage());
+		}
+	}
+	
+	public void insertScenarioRow(int id, String Scenario) {
+		try {
+			insertScenarios.setInt(1, id);
+			insertScenarios.setString(2, Scenario);
+			insertScenarios.executeUpdate();
+			insertScenarios.clearParameters();
+		} catch(SQLException e) {
+			System.err.println(e.getMessage());
+		}
+	}
+	
+	public void insertClimateRow(int Site_id, int Scenario, int StartYear, int EndYear, double MAP_cm, double MAT_C, double[] MMTemp, double[] MMPPT, double[] CP_PPT, double[] CP_TempMax, double[] CP_TempMin) {
+		try {
+			insertClimate.setInt(1, Site_id);
+			insertClimate.setInt(2, Scenario);
+			insertClimate.setInt(3, StartYear);
+			insertClimate.setInt(4, EndYear);
+			insertClimate.setDouble(5, MAP_cm);
+			insertClimate.setDouble(6, MAT_C);
+			for(int i=0; i<12; i++) //7,8,9,10,11,12,13,14,15,16,17,18
+				insertClimate.setDouble(i+7, MMTemp[i]);
+			for(int i=0; i<12; i++) //19,20,21,22,23,24,25,26,27,28,29,30
+				insertClimate.setDouble(i+19, MMPPT[i]);
+			for(int i=0; i<12; i++) //31,32,33,34,35,36,37,38,39,40,41,42
+				insertClimate.setDouble(i+31, CP_PPT[i]);
+			for(int i=0; i<12; i++) //43,44,45,46,47,48,49,50,51,52,53,54
+				insertClimate.setDouble(i+43, CP_TempMax[i]);
+			for(int i=0; i<12; i++) //55,56,57,58,59,60,61,62,63,64,65,66
+				insertClimate.setDouble(i+55, CP_TempMin[i]);
+			insertClimate.executeUpdate();
+			insertClimate.clearParameters();
+		} catch(SQLException e) {
+			System.err.println(e.getMessage());
+		}
+	}
+	
+	public void insertWeatherDataRow(int Site_id, int Scenario, List<YearData> data) {
+		int id = data.get(0).id;
+		int scenario = data.get(0).scenario;
+		int startYear = data.get(0).year;
+		int endYear = data.get(data.size()-1).year;
+		String compress = new String();
+		for(int i=0; i<data.size(); i++) {
+			compress += data.get(i).toString();
+		}
+		try {
+			insertData.setInt(1, id);
+			insertData.setInt(2, scenario);
+			insertData.setInt(3, startYear);
+			insertData.setInt(4, endYear);
+			insertData.setBytes(5, compresseString(compress));
+			insertData.executeUpdate();
+			insertData.clearParameters();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public int getVersion() {
+		int version = -1;
+		
+		try {
+			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(30);
+			ResultSet rs = statement.executeQuery("SELECT name FROM sqlite_master WHERE type='table';");
+			while(rs.next()) {
+				if(rs.getString("name").toLowerCase().equals("version")) {
+					try {
+						Statement statement2 = connection.createStatement();
+						statement2.setQueryTimeout(30);
+						ResultSet rs2 = statement2.executeQuery("SELECT Version FROM Version;");
+						rs2.next();
+						version = rs2.getInt("Version");
+						rs2.close();
+					} catch(SQLException e) {
+				        System.err.println(e.getMessage());
+				    }
+					break;
+				}
+			}
+			rs.close();
+		} catch(SQLException e) {
+	        System.err.println(e.getMessage());
+	    }
+		//No version table exists or a problem happend
+		if(version == -1) {
+			//check the weatherdata table
+			int columns = 0;
+			try {
+				Statement statement2 = connection.createStatement();
+				statement2.setQueryTimeout(30);
+				ResultSet rs2 = statement2.executeQuery("PRAGMA table_info(WeatherData);");
+				while(rs2.next()) {
+					columns++;
+					if(rs2.getString("name").toLowerCase().equals("startyear")) {
+						version = 1;
+						break;
+					}
+				}
+				if(columns == 3)
+					version = 0;
+				rs2.close();
+			} catch(SQLException e) {
+		        System.err.println(e.getMessage());
+		    }
+		}
 
-	public List<YearData> getData(int Site_id, int Scenario, int startYear, int endYear) {
+		return version;
+	}
+	
+	public List<YearData> getDataNew(Connection con, int Site_id, int Scenario, int startYear, int endYear) {
+		weatherData.clear();
+		String allData = new String();
+		int StartYear = 0;
+		int EndYear = 0;
+		try {
+			Statement statement = con.createStatement();
+			statement.setQueryTimeout(30); // set timeout to 30 sec.
+
+			ResultSet rs;
+
+			rs = statement.executeQuery("SELECT StartYear, EndYear, data FROM weatherdata WHERE Site_id="
+							+ String.valueOf(Site_id) + " AND Scenario="
+							+ String.valueOf(Scenario) + ";");
+			rs.next();
+			StartYear = rs.getInt(1);
+			EndYear = rs.getInt(2);
+			byte[] vals = rs.getBytes(3);
+			rs.close();
+			allData = uncompressBytes(vals);
+
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			return null;
+		}
+		
+		String[] yearlyData = allData.split(";");
+		int year = StartYear;
+		
+		for(int i=0; i<yearlyData.length; i++) {
+			if(year >= startYear && year <= endYear) {
+				String[] dailyData = yearlyData[0].split("\n");
+				int days = dailyData.length;
+				YearData data = new YearData();
+				data.id = Site_id; data.scenario = Scenario; data.year = year; data.days=days;
+				data.Tmax = new double[days];
+				data.Tmin = new double[days];
+				data.ppt = new double[days];
+				for(int j=0; j<dailyData.length; j++) {
+					String[] values = dailyData[j].split(",");
+					data.Tmax[j] = Double.parseDouble(values[0]);
+					data.Tmin[j] = Double.parseDouble(values[1]);
+					data.ppt[j] = Double.parseDouble(values[2]);
+				}
+				weatherData.add(data);
+			}
+			year++;
+			if(year > EndYear)
+				break;
+		}
+		return weatherData;
+	}
+	
+	public List<YearData> getDataOld(int Site_id, int Scenario, int startYear, int endYear) {
 		weatherData.clear();
 		ByteBuffer serialized = ByteBuffer.wrap(new byte[1]);
 		try {
@@ -378,6 +694,38 @@ public class WeatherData {
 	    	System.err.println(e.getMessage());
 	    }
 		return label;
+	}
+	
+	public int getNumberClimate() {
+		int nRows = 0;
+		try {
+			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(30);  // set timeout to 30 sec.
+			ResultSet rs = statement.executeQuery("SELECT COUNT(*) AS nSites FROM climate;");
+			while(rs.next()) {
+				nRows = rs.getInt("nSites");
+			}
+			rs.close();
+		} catch(SQLException e) {
+	    	System.err.println(e.getMessage());
+	    }
+		return nRows;
+	}
+	
+	public int getNumberWeatherData() {
+		int nRows = 0;
+		try {
+			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(30);  // set timeout to 30 sec.
+			ResultSet rs = statement.executeQuery("SELECT COUNT(*) AS nSites FROM weatherdata;");
+			while(rs.next()) {
+				nRows = rs.getInt("nSites");
+			}
+			rs.close();
+		} catch(SQLException e) {
+	    	System.err.println(e.getMessage());
+	    }
+		return nRows;
 	}
 	
 	public int getNumberSites() {
@@ -696,26 +1044,6 @@ public class WeatherData {
 		return temp;
 	}
 	
-	public boolean createClimateTable() {
-		String columns = "MAT_C REAL,MAP_cm REAL," +
-				"MMTemp_C_m1 REAL,MMTemp_C_m2 REAL,MMTemp_C_m3 REAL,MMTemp_C_m4 REAL,MMTemp_C_m5 REAL,MMTemp_C_m6 REAL,MMTemp_C_m7 REAL,MMTemp_C_m8 REAL,MMTemp_C_m9 REAL,MMTemp_C_m10 REAL,MMTemp_C_m11 REAL,MMTemp_C_m12 REAL," +
-				"MMPPT_C_m1 REAL,MMPPT_C_m2 REAL,MMPPT_C_m3 REAL,MMPPT_C_m4 REAL,MMPPT_C_m5 REAL,MMPPT_C_m6 REAL,MMPPT_C_m7 REAL,MMPPT_C_m8 REAL,MMPPT_C_m9 REAL,MMPPT_C_m10 REAL,MMPPT_C_m11 REAL,MMPPT_C_m12 REAL," +
-				"ClimatePerturbations_PrcpMultiplier_m1 REAL,ClimatePerturbations_PrcpMultiplier_m2 REAL,ClimatePerturbations_PrcpMultiplier_m3 REAL,ClimatePerturbations_PrcpMultiplier_m4 REAL,ClimatePerturbations_PrcpMultiplier_m5 REAL,ClimatePerturbations_PrcpMultiplier_m6 REAL,ClimatePerturbations_PrcpMultiplier_m7 REAL,ClimatePerturbations_PrcpMultiplier_m8 REAL,ClimatePerturbations_PrcpMultiplier_m9 REAL,ClimatePerturbations_PrcpMultiplier_m10 REAL,ClimatePerturbations_PrcpMultiplier_m11 REAL,ClimatePerturbations_PrcpMultiplier_m12 REAL," +
-				"ClimatePerturbations_TmaxAddand_m1 REAL,ClimatePerturbations_TmaxAddand_m2 REAL,ClimatePerturbations_TmaxAddand_m3 REAL,ClimatePerturbations_TmaxAddand_m4 REAL,ClimatePerturbations_TmaxAddand_m5 REAL,ClimatePerturbations_TmaxAddand_m6 REAL,ClimatePerturbations_TmaxAddand_m7 REAL,ClimatePerturbations_TmaxAddand_m8 REAL,ClimatePerturbations_TmaxAddand_m9 REAL,ClimatePerturbations_TmaxAddand_m10 REAL,ClimatePerturbations_TmaxAddand_m11 REAL,ClimatePerturbations_TmaxAddand_m12 REAL," +
-				"ClimatePerturbations_TminAddand_m1 REAL,ClimatePerturbations_TminAddand_m2 REAL,ClimatePerturbations_TminAddand_m3 REAL,ClimatePerturbations_TminAddand_m4 REAL,ClimatePerturbations_TminAddand_m5 REAL,ClimatePerturbations_TminAddand_m6 REAL,ClimatePerturbations_TminAddand_m7 REAL,ClimatePerturbations_TminAddand_m8 REAL,ClimatePerturbations_TminAddand_m9 REAL,ClimatePerturbations_TminAddand_m10 REAL,ClimatePerturbations_TminAddand_m11 REAL,ClimatePerturbations_TminAddand_m12 REAL,";
-		try {
-			Statement statement = connection.createStatement();
-			statement.setQueryTimeout(30);
-			
-			statement.executeUpdate("CREATE TABLE climate (Site_id INTEGER, Scenario INTEGER, StartYear INTEGER, EndYear INTEGER, "+columns+" PRIMARY KEY (Site_id, Scenario));");
-			statement.close();
-			return true;
-		} catch(SQLException e) {
-			System.err.println(e.getMessage());
-			return false;
-		}
-	}
-	
 	public boolean checkClimateTable() {
 		boolean climateTableExists = false;
 		try {
@@ -764,39 +1092,159 @@ public class WeatherData {
 		return climateTableAllValuesExist;
 	}
 	
-	public void insertClimateRow(int Site_id, int Scenario, int StartYear, int EndYear, double MAP_cm, double MAT_C, double[] MMTemp, double[] MMPPT, double[] CP_PPT, double[] CP_TempMax, double[] CP_TempMin) {
+	public void closeConnection() {
 		try {
-			preparedStatement.setInt(1, Site_id);
-			preparedStatement.setInt(2, Scenario);
-			preparedStatement.setInt(3, StartYear);
-			preparedStatement.setInt(4, EndYear);
-			preparedStatement.setDouble(5, MAP_cm);
-			preparedStatement.setDouble(6, MAT_C);
-			for(int i=0; i<12; i++) //7,8,9,10,11,12,13,14,15,16,17,18
-				preparedStatement.setDouble(i+7, MMTemp[i]);
-			for(int i=0; i<12; i++) //19,20,21,22,23,24,25,26,27,28,29,30
-				preparedStatement.setDouble(i+19, MMPPT[i]);
-			for(int i=0; i<12; i++) //31,32,33,34,35,36,37,38,39,40,41,42
-				preparedStatement.setDouble(i+31, CP_PPT[i]);
-			for(int i=0; i<12; i++) //43,44,45,46,47,48,49,50,51,52,53,54
-				preparedStatement.setDouble(i+43, CP_TempMax[i]);
-			for(int i=0; i<12; i++) //55,56,57,58,59,60,61,62,63,64,65,66
-				preparedStatement.setDouble(i+55, CP_TempMin[i]);
-			preparedStatement.executeUpdate();
-		} catch(SQLException e) {
+			this.connection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void createNewDatabase(ProgressBar.Task t, JTextArea taskOutput, JLabel timeLeft) {
+		try {
+			//Create this table if it doesn't exist
+			if(!checkClimateTable()) {
+				createTableClimate(connection);
+			}
+			
+			File newdb = File.createTempFile("temp", ".sqlite3", this.weatherDatabase.getParent().toFile());
+			connection2 = DriverManager.getConnection("jdbc:sqlite:"+newdb.toString());
+			Statement statement = connection2.createStatement();
+			statement.setQueryTimeout(30);
+			statement.executeUpdate("PRAGMA synchronous = OFF");
+			statement.executeUpdate("PRAGMA journal_mode = MEMORY");
+			statement.close();
+			createTableVersion(connection2);
+			createTableSites(connection2);
+			createTableScenarios(connection2);
+			createTableWeatherData(connection2);
+			createTableClimate(connection2);
+			insertSites = connection2.prepareStatement("INSERT INTO Sites(Site_id,Latitude,Longitude,Label) VALUES(?,?,?,?);");
+			insertScenarios = connection2.prepareStatement("INSERT INTO Scenarios(id,Scenario) VALUES (?,?);");
+			insertData = connection2.prepareStatement("INSERT INTO weatherdata(Site_id,Scenario,StartYear,EndYear,data) VALUES(?,?,?,?,?);");
+			insertClimate = connection2.prepareStatement(insertClimateTableSQL);
+			
+			
+			//total work
+			int total = getNumberWeatherData();
+			int done = 0;
+			ExecutionTimer timer = new ExecutionTimer();
+			double timeSum = 0;
+			double average = 0;
+			double remaining = 0;
+			String units = "";
+			
+			statement = connection.createStatement();
+			
+			//Copy Sites
+			ResultSet rs = statement.executeQuery("SELECT * FROM Sites;");
+			while(rs.next()) {
+				insertSiteRow(rs.getInt(1), rs.getDouble(2), rs.getDouble(3), rs.getString(4));
+				if(Thread.interrupted()) {
+					return;
+				}
+			}
+			rs.close();
+			taskOutput.append("Table Sites Copied\n");
+			
+			//Copy Scenarios
+			rs = statement.executeQuery("SELECT * FROM Scenarios;");
+			while(rs.next()) {
+				insertScenarioRow(rs.getInt(1), rs.getString(2));
+				
+				if(Thread.interrupted()) {
+					return;
+				}
+			}
+			rs.close();
+			taskOutput.append("Table Scenarios Copied\n");
+			
+			//Copy Climate
+			rs = statement.executeQuery("SELECT * FROM climate;");
+			while(rs.next()) {
+				double[] MMTemp = new double[] {rs.getDouble(7),rs.getDouble(8),rs.getDouble(9),rs.getDouble(10),rs.getDouble(11),rs.getDouble(12),rs.getDouble(13),rs.getDouble(14),rs.getDouble(15),rs.getDouble(16),rs.getDouble(17),rs.getDouble(18)};
+				double[] MMPPT = new double[] {rs.getDouble(19),rs.getDouble(20),rs.getDouble(21),rs.getDouble(22),rs.getDouble(23),rs.getDouble(24),rs.getDouble(25),rs.getDouble(26),rs.getDouble(27),rs.getDouble(28),rs.getDouble(29),rs.getDouble(30)};
+				double[] CP_PPT = new double[] {rs.getDouble(31),rs.getDouble(32),rs.getDouble(33),rs.getDouble(34),rs.getDouble(35),rs.getDouble(36),rs.getDouble(37),rs.getDouble(38),rs.getDouble(39),rs.getDouble(40),rs.getDouble(41),rs.getDouble(42)};
+				double[] CP_TempMax = new double[] {rs.getDouble(43),rs.getDouble(44),rs.getDouble(45),rs.getDouble(46),rs.getDouble(47),rs.getDouble(48),rs.getDouble(49),rs.getDouble(50),rs.getDouble(51),rs.getDouble(52),rs.getDouble(53),rs.getDouble(54)};
+				double[] CP_TempMin = new double[] {rs.getDouble(55),rs.getDouble(56),rs.getDouble(57),rs.getDouble(58),rs.getDouble(59),rs.getDouble(60),rs.getDouble(61),rs.getDouble(62),rs.getDouble(63),rs.getDouble(64),rs.getDouble(65),rs.getDouble(66)};
+				insertClimateRow(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getInt(4), rs.getDouble(5), rs.getDouble(6), MMTemp, MMPPT, CP_PPT, CP_TempMax, CP_TempMin);
+				
+				if(Thread.interrupted()) {
+					return;
+				}
+			}
+			rs.close();
+			taskOutput.append("Table climate Copied\n");
+			
+			//Copy Data
+			rs = statement.executeQuery("SELECT Site_id, Scenario FROM weatherdata;");
+			while(rs.next()) {
+				int Site_id = rs.getInt(1);
+				int Scenario = rs.getInt(2);
+				
+				List<WeatherData.YearData> data = getDataOld(Site_id, Scenario, 0, 5000);
+				insertWeatherDataRow(Site_id, Scenario, data);
+				done++;
+				
+				int percent = (int)(((double)(done)/total)*100);
+				t.updateProgress(percent);
+				timer.end();
+				timeSum += (double)timer.duration()/1000.0;
+				timer.reset();
+				
+				if(percent % 2 == 0) {
+					average = timeSum/(done);
+					remaining = (average)*(total-done);
+					units = "seconds";
+					if(remaining > 3600) {
+						remaining = remaining/(60*60);
+						units = "hour(s)";
+					} else if (remaining > 60) {
+						remaining = remaining/(60);
+						units = "minute(s)";
+					}
+					timeLeft.setText(String.format("%.1f", remaining) + " " + units);
+				}
+				if(Thread.interrupted()) {
+					return;
+				}
+			}
+			this.connection.close();
+			this.connection2.close();
+			
+			Object[] options = {"Yes","No"};
+			int choice = JOptionPane.showOptionDialog(null, "Delete old database?", "Weather Data", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+			if(choice == 0) {
+				Files.delete(weatherDatabase);
+				newdb.renameTo(weatherDatabase.toFile());
+			} else {
+				String fileName = weatherDatabase.getFileName().toString();
+				String pathName = weatherDatabase.getParent()+"/"+fileName+".bk";
+				weatherDatabase.toFile().renameTo(new File(pathName));
+				newdb.renameTo(weatherDatabase.toFile());
+			}
+			
+		} catch(Exception e) {
 			System.err.println(e.getMessage());
 		}
-		
 	}
+	
 	public void generateClimateTable(ProgressBar.Task t, JTextArea taskOutput, JLabel timeLeft) {
 		try {
-			if(!checkClimateTable()) {
-				createClimateTable();
-				preparedStatement = connection.prepareStatement(insertClimateTableSQL);
-			}
-			preparedStatement = connection.prepareStatement(insertClimateTableSQL);
-			
 			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(30);
+			statement.executeUpdate("PRAGMA synchronous = OFF");
+			statement.executeUpdate("PRAGMA journal_mode = MEMORY");
+			statement.close();
+			
+			if(!checkClimateTable()) {
+				createTableClimate(connection);
+				insertClimate = connection.prepareStatement(insertClimateTableSQL);
+			}
+			insertClimate = connection.prepareStatement(insertClimateTableSQL);
+			
+			statement = connection.createStatement();
 			statement.setQueryTimeout(45);
 			
 			ResultSet rs = statement.executeQuery("SELECT weatherdata.Site_id AS Site_id, weatherdata.Scenario AS Scenario FROM weatherdata LEFT JOIN climate ON (weatherdata.Site_id=climate.Site_id) AND (weatherdata.Scenario=climate.Scenario) WHERE climate.Site_id IS NULL AND climate.Scenario IS NULL ORDER BY Site_id,Scenario;");
@@ -876,7 +1324,7 @@ public class WeatherData {
 				}
 
 				hist = new SW_WEATHER_HISTORY();
-				for (YearData year : this.getData(Site_id, Scenario, 0, 3000)) {
+				for (YearData year : this.getDataNew(connection, Site_id, Scenario, 0, 5000)) {
 					hist.add_year(year.year, year.ppt, year.Tmax, year.Tmin);
 				}
 				scenarioWeatherData.set(Scenario - 1, hist);
@@ -899,7 +1347,7 @@ public class WeatherData {
 															// current scenario,
 															// should have
 					hist = new SW_WEATHER_HISTORY();
-					for (YearData year : this.getData(Site_id, 1, 0, 3000)) {
+					for (YearData year : this.getDataNew(connection, Site_id, 1, 0, 5000)) {
 						hist.add_year(year.year, year.ppt, year.Tmax, year.Tmin);
 					}
 					scenarioWeatherData.set(0, hist);

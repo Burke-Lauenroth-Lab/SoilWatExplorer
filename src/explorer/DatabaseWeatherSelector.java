@@ -282,7 +282,7 @@ public class DatabaseWeatherSelector extends JFrame implements ActionListener, S
 			if(choice == 0) {
 				javax.swing.SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
-						ProgressBar.createAndShowGUI(exe, data);
+						ProgressBar.createAndShowGUI(exe, data, true);
 					}
 				});
 				this.setEnabled(false);
@@ -332,7 +332,7 @@ public class DatabaseWeatherSelector extends JFrame implements ActionListener, S
 			hist.removeAll();
 			int startYear = ((Number)comboBox_startYear.getSelectedItem()).intValue();
 			int endYear = ((Number)comboBox_endYear.getSelectedItem()).intValue();
-			List<database.WeatherData.YearData> temp = data.getData(this.Site_id, Scenario, startYear, endYear);
+			List<database.WeatherData.YearData> temp = data.getDataNew(data.getConnection(), this.Site_id, Scenario, startYear, endYear);
 			for (database.WeatherData.YearData year : temp) {
 				hist.add_year(year.year, year.ppt, year.Tmax, year.Tmin);
 			}

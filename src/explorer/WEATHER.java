@@ -44,11 +44,15 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
 
+import database.Converter;
+import database.ProgressBar;
+import database.WeatherData;
+
 import javax.swing.JComboBox;
 
 import org.openstreetmap.gui.jmapviewer.SiteEvent;
 
-public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent {
+public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent, Converter {
 	
 	private static class DirectoriesFilter implements Filter<Path> {
 	    @Override
@@ -720,10 +724,23 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 				
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		        	Path weatherDB = fc.getSelectedFile().toPath();
-		        	DatabaseWeatherSelector dbWeatherTool = new DatabaseWeatherSelector(weatherDB, weatherHist);
-		        	dbWeatherTool.addSiteEventListener(getInstance());
-		        	dbWeatherTool.pack();
-		        	dbWeatherTool.setVisible(true);
+		        	WeatherData data = new WeatherData(weatherDB);
+		        	if(data.getVersion() != 1) {
+		    			Object[] options = {"Yes","No"};
+		    			int choice = JOptionPane.showOptionDialog(null, "Weather database is a old version, upgrade?", "Weather Data", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+		    			if(choice == 0) {
+		    				ProgressBar b = ProgressBar.createAndShowGUI(null, data, false);
+		    				b.register(getInstance());
+		    			} else {
+		    				
+		    			}
+		    		} else {
+		    			data.closeConnection();
+	    				DatabaseWeatherSelector dbWeatherTool = new DatabaseWeatherSelector(weatherDB, weatherHist);
+	    		    	dbWeatherTool.addSiteEventListener(getInstance());
+	    		    	dbWeatherTool.pack();
+	    		    	dbWeatherTool.setVisible(true);
+		    		}
 		        } else {
 		        	
 		        }
@@ -1597,5 +1614,13 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 			};
 		}
 		return model;
+	}
+
+	@Override
+	public void conversionComplete(Path weatherDB) {
+		DatabaseWeatherSelector dbWeatherTool = new DatabaseWeatherSelector(weatherDB, weatherHist);
+    	dbWeatherTool.addSiteEventListener(getInstance());
+    	dbWeatherTool.pack();
+    	dbWeatherTool.setVisible(true);
 	}
 }
