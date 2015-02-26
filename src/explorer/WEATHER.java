@@ -107,6 +107,7 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 		weatherSetupIn.pct_snowRunoff = ((Number)formattedTextField_pct_snowRunoff.getValue()).doubleValue();
 		weatherSetupIn.use_markov = chckbx_weather_useMarkov.isSelected();
 		weatherSetupIn.days_in_runavg = ((Number)formattedTextField_days_in_runavg.getValue()).intValue();
+		weatherSetupIn.yr.setFirst(weatherHist.getStartYear());
 		
 		for(int i=0; i<12; i++) {
 			weatherSetupIn.scale_precip[i] = ((Number)table_weather_monthlyScalingParam.getValueAt(i, 1)).doubleValue();

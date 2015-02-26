@@ -83,6 +83,7 @@ public class WeatherData {
 		try {
 			Class.forName("org.sqlite.JDBC");
 		} catch (ClassNotFoundException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			e.printStackTrace();
 		}
 		this.weatherDatabase = weatherDB;
@@ -93,6 +94,7 @@ public class WeatherData {
 		try {
 			Class.forName("org.sqlite.JDBC");
 		} catch (ClassNotFoundException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			e.printStackTrace();
 		}
 		this.weatherDatabase = Paths.get(weatherDB);
@@ -104,6 +106,7 @@ public class WeatherData {
 		try {
 			Class.forName("org.sqlite.JDBC");
 		} catch (ClassNotFoundException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			e.printStackTrace();
 		}
 		this.weatherDatabase = weatherDB;
@@ -118,9 +121,8 @@ public class WeatherData {
 	    }
 	    catch(SQLException e)
 	    {
-	      // if the error message is "out of memory", 
-	      // it probably means no database file is found
-	      System.err.println(e.getMessage());
+	    	JOptionPane.showMessageDialog(null, e.toString());
+	    	System.err.println(e.getMessage());
 	    }
 	}
 	
@@ -141,6 +143,7 @@ public class WeatherData {
 			gzip.finish();
 			gzip.close();
 		} catch (IOException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			e.printStackTrace();
 		}
 		
@@ -156,6 +159,7 @@ public class WeatherData {
 			in.write(data);
 			in.flush();
 		} catch (IOException e1) {
+			JOptionPane.showMessageDialog(null, e1.toString());
 			e1.printStackTrace();
 		}
 		
@@ -166,6 +170,7 @@ public class WeatherData {
 			gzip.finish();
 			gzip.close();
 		} catch (IOException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			e.printStackTrace();
 		}
 		return new String(out.toByteArray());
@@ -179,6 +184,7 @@ public class WeatherData {
 			statement.executeUpdate(weatherData);
 			statement.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	        System.err.println(e.getMessage());
 	    }
 	}
@@ -192,6 +198,7 @@ public class WeatherData {
 			statement.executeUpdate("INSERT INTO Version (Version) VALUES (1);");
 			statement.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	        System.err.println(e.getMessage());
 	    }
 	}
@@ -204,6 +211,7 @@ public class WeatherData {
 			statement.executeUpdate(sites);
 			statement.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	        System.err.println(e.getMessage());
 	    }
 	}
@@ -216,6 +224,7 @@ public class WeatherData {
 			statement.executeUpdate(scenarios);
 			statement.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	        System.err.println(e.getMessage());
 	    }
 	}
@@ -235,6 +244,7 @@ public class WeatherData {
 			statement.close();
 			return true;
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 			return false;
 		}
@@ -249,6 +259,7 @@ public class WeatherData {
 			insertSites.executeUpdate();
 			insertSites.clearParameters();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 		}
 	}
@@ -260,6 +271,7 @@ public class WeatherData {
 			insertScenarios.executeUpdate();
 			insertScenarios.clearParameters();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 		}
 	}
@@ -285,6 +297,7 @@ public class WeatherData {
 			insertClimate.executeUpdate();
 			insertClimate.clearParameters();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 		}
 	}
@@ -307,6 +320,7 @@ public class WeatherData {
 			insertData.executeUpdate();
 			insertData.clearParameters();
 		} catch (SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			e.printStackTrace();
 		}
 	}
@@ -335,6 +349,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	        System.err.println(e.getMessage());
 	    }
 		//No version table exists or a problem happend
@@ -356,6 +371,7 @@ public class WeatherData {
 					version = 0;
 				rs2.close();
 			} catch(SQLException e) {
+				JOptionPane.showMessageDialog(null, e.toString());
 		        System.err.println(e.getMessage());
 		    }
 		}
@@ -385,6 +401,7 @@ public class WeatherData {
 			allData = uncompressBytes(vals);
 
 		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 			return null;
 		}
@@ -394,7 +411,7 @@ public class WeatherData {
 		
 		for(int i=0; i<yearlyData.length; i++) {
 			if(year >= startYear && year <= endYear) {
-				String[] dailyData = yearlyData[0].split("\n");
+				String[] dailyData = yearlyData[i].split("\n");
 				int days = dailyData.length;
 				YearData data = new YearData();
 				data.id = Site_id; data.scenario = Scenario; data.year = year; data.days=days;
@@ -416,7 +433,7 @@ public class WeatherData {
 		return weatherData;
 	}
 	
-	public List<YearData> getDataOld(int Site_id, int Scenario, int startYear, int endYear) {
+	public List<YearData> getDataOld(int Site_id, int Scenario, int startYear, int endYear) throws Exception {
 		weatherData.clear();
 		ByteBuffer serialized = ByteBuffer.wrap(new byte[1]);
 		try {
@@ -447,23 +464,31 @@ public class WeatherData {
 			serialized = ByteBuffer.wrap(serializedRObjects.toByteArray());
 
 		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 		}
 
 		Serialize ds = new Serialize();
 		ds.unserialize(serialized);
 
-		for(int i=0; i<ds.data.list.size(); i+=3) {
-			int year = ds.data.list.get(i+2).nVals[0];
-			if(year >= startYear && year <= endYear) {
-				int days = ds.data.list.get(i+1).nVals[0];
-				YearData data = new YearData();
-				data.id = Site_id; data.scenario = Scenario; data.year = year; data.days=days;
-				data.Tmax = Arrays.copyOfRange(ds.data.list.get(i).dVals, data.days, data.days*2);
-				data.Tmin = Arrays.copyOfRange(ds.data.list.get(i).dVals, data.days*2, data.days*3);
-				data.ppt = Arrays.copyOfRange(ds.data.list.get(i).dVals, data.days*3, data.days*4);
-				weatherData.add(data);
+		if(ds.problem == false) {
+			for (int i = 0; i < ds.data.list.size(); i += 3) {
+				int year = ds.data.list.get(i + 2).nVals[0];
+				if (year >= startYear && year <= endYear) {
+					int days = ds.data.list.get(i + 1).nVals[0];
+					YearData data = new YearData();
+					data.id = Site_id;
+					data.scenario = Scenario;
+					data.year = year;
+					data.days = days;
+					data.Tmax = Arrays.copyOfRange(ds.data.list.get(i).dVals, data.days, data.days * 2);
+					data.Tmin = Arrays.copyOfRange(ds.data.list.get(i).dVals, data.days * 2, data.days * 3);
+					data.ppt = Arrays.copyOfRange(ds.data.list.get(i).dVals, data.days * 3, data.days * 4);
+					weatherData.add(data);
+				}
 			}
+		} else {
+			throw new Exception(ds.emessage);
 		}
 		return weatherData;
 	}
@@ -499,8 +524,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
-	    	// if the error message is "out of memory", 
-	    	// it probably means no database file is found
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return this.sites;
@@ -517,8 +541,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
-	    	// if the error message is "out of memory", 
-	    	// it probably means no database file is found
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return maxMAT_c;
@@ -535,8 +558,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
-	    	// if the error message is "out of memory", 
-	    	// it probably means no database file is found
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return minMAT_c;
@@ -553,8 +575,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
-	    	// if the error message is "out of memory", 
-	    	// it probably means no database file is found
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return maxMAP_cm;
@@ -571,8 +592,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
-	    	// if the error message is "out of memory", 
-	    	// it probably means no database file is found
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return minMAP_cm;
@@ -590,8 +610,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
-	    	// if the error message is "out of memory", 
-	    	// it probably means no database file is found
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return MinLatitude;
@@ -607,8 +626,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
-	    	// if the error message is "out of memory", 
-	    	// it probably means no database file is found
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return MaxLatitude;
@@ -624,6 +642,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return MinLongitude;
@@ -639,6 +658,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return MaxLongitude;
@@ -654,8 +674,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
-	    	// if the error message is "out of memory", 
-	    	// it probably means no database file is found
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return Latitude;
@@ -671,8 +690,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
-	    	// if the error message is "out of memory", 
-	    	// it probably means no database file is found
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return Longitude;
@@ -689,8 +707,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
-	    	// if the error message is "out of memory", 
-	    	// it probably means no database file is found
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return label;
@@ -707,6 +724,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return nRows;
@@ -723,6 +741,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return nRows;
@@ -739,6 +758,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return nSites;
@@ -757,6 +777,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return ids;
@@ -772,6 +793,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return nScenarios;
@@ -791,6 +813,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return names;
@@ -807,6 +830,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return nRows;
@@ -823,6 +847,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return nRows;
@@ -842,6 +867,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return ids;
@@ -858,6 +884,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return year;
@@ -873,6 +900,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 	    	System.err.println(e.getMessage());
 	    }
 		return year;
@@ -900,6 +928,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 		}
 		return temp;
@@ -927,6 +956,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 		}
 		return temp;
@@ -954,6 +984,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 		}
 		return temp;
@@ -981,6 +1012,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 		}
 		return temp;
@@ -1008,6 +1040,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 		}
 		return temp;
@@ -1023,6 +1056,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 		}
 		return temp;
@@ -1039,6 +1073,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 		}
 		return temp;
@@ -1059,6 +1094,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 		}
 		return climateTableExists;
@@ -1087,6 +1123,7 @@ public class WeatherData {
 			}
 			rs.close();
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 		}
 		return climateTableAllValuesExist;
@@ -1096,7 +1133,7 @@ public class WeatherData {
 		try {
 			this.connection.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			JOptionPane.showMessageDialog(null, e.toString());
 			e.printStackTrace();
 		}
 	}
@@ -1179,12 +1216,24 @@ public class WeatherData {
 			
 			//Copy Data
 			rs = statement.executeQuery("SELECT Site_id, Scenario FROM weatherdata;");
+			List<WeatherData.YearData> data = this.weatherData;
+			timer.reset();
 			while(rs.next()) {
 				int Site_id = rs.getInt(1);
 				int Scenario = rs.getInt(2);
 				
-				List<WeatherData.YearData> data = getDataOld(Site_id, Scenario, 0, 5000);
-				insertWeatherDataRow(Site_id, Scenario, data);
+				try {
+					data = getDataOld(Site_id, Scenario, 0, 5000);
+				} catch(Exception e) {
+					taskOutput.append("Site:"+Integer.toString(Site_id) + " Scenario:"+Integer.toString(Scenario)+"\n");
+					taskOutput.append(e.toString() + "\n");
+				}
+				if(data.isEmpty()) {
+					
+				} else {
+					insertWeatherDataRow(Site_id, Scenario, data);
+				}
+				
 				done++;
 				
 				int percent = (int)(((double)(done)/total)*100);
@@ -1226,6 +1275,7 @@ public class WeatherData {
 			}
 			
 		} catch(Exception e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 		}
 	}
@@ -1378,6 +1428,7 @@ public class WeatherData {
 						TminAddand);
 			}
 		} catch(SQLException e) {
+			JOptionPane.showMessageDialog(null, e.toString());
 			System.err.println(e.getMessage());
 		}
 	}

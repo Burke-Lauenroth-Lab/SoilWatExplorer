@@ -159,7 +159,7 @@ public class SWExplorer implements ActionListener, MenuListener{
 			tabbedPane.setSelectedIndex(0);			
 			control.onGetLog().clear();
 			try {
-				control.onStartModel(false, files.getSaveOutData());
+				control.onStartModel(false, true, files.getSaveOutData());
 				if(control.onGetLog().size() != 0)
 					files.textArea_logFile.setText(control.onGetLog().toString());
 					//JOptionPane.showMessageDialog(null, control.onGetLog(),"Executed", JOptionPane.OK_OPTION);

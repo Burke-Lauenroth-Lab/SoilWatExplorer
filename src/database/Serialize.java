@@ -6,9 +6,13 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+
 public class Serialize {
 	
 	public SEXP data;
+	public boolean problem=false;
+	public String emessage = "";
 	
 	public class SEXP {
 		int type;
@@ -787,6 +791,8 @@ public class Serialize {
 		data.list = new ArrayList<Serialize.SEXP>();
 		while(stream.serialized.remaining() != 0) {
 			SEXP temp = ReadItem(ref_table, stream);
+			if(this.problem == true)
+				break;
 			if(temp.type == REALSXP || temp.type == INTSXP)
 				data.list.add(temp);
 		}
@@ -1086,8 +1092,15 @@ public class Serialize {
 				len = ReadLENGTH(stream);
 				s = new SEXP(type, len);
 				R_ReadItemDepth++;
-				for (count = 0; count < len; ++count)
+				for (count = 0; count < len; ++count) {
 					s.sVals[count] = ReadItem(ref_table, stream).character;
+					//check for Error
+					if(s.sVals[count].contains("Error") || s.sVals[count].contains("(converted from warning)")) {
+						//JOptionPane.showMessageDialog(null, s.sVals[count]);
+						this.problem = true;
+						this.emessage = s.sVals[count];
+					}
+				}
 				R_ReadItemDepth--;
 				break;
 			case VECSXP:
