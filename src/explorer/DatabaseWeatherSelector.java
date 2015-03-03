@@ -31,6 +31,8 @@ import javax.swing.JTextField;
 
 import org.openstreetmap.gui.jmapviewer.SiteEvent;
 
+import soilwat.LogFileIn;
+
 import javax.swing.JComboBox;
 
 import java.awt.Font;
@@ -135,12 +137,12 @@ public class DatabaseWeatherSelector extends JFrame implements ActionListener, S
 	private void finialize() {
 		this.pack();
 	}
-	public DatabaseWeatherSelector(Path weatherDB, soilwat.SW_WEATHER_HISTORY hist) {
+	public DatabaseWeatherSelector(LogFileIn log, Path weatherDB, soilwat.SW_WEATHER_HISTORY hist) {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 827, 513);
 		this.Scenario = 1;
 		plots = new Weather();
-		data = new WeatherData(weatherDB);
+		data = new WeatherData(log,weatherDB);
 		this.hist = hist;
 		map.addSiteListener(this);
 		

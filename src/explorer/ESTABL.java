@@ -471,7 +471,7 @@ public class ESTABL implements ListSelectionListener, ActionListener{
 	    		if(text_estab_addSPP_name.getText() != "") {
 	    			//add to list
 	    			this.estab.estabFiles.add(text_estab_addSPP_name.getText());
-	    			this.estab.spps.add(new SPP_INPUT_DATA());
+	    			this.estab.spps.add(new SPP_INPUT_DATA(this.estab.getLog()));
 	    			//Save current spp
 	    			onGet_SPP(this.list_estab_spp.getSelectedIndex());
 	    			onReset_list();

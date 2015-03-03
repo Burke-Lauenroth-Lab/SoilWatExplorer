@@ -31,6 +31,7 @@ import javax.swing.JTextArea;
 import org.openstreetmap.gui.jmapviewer.Coordinate;
 import org.openstreetmap.gui.jmapviewer.MapMarkerDot;
 
+import soilwat.LogFileIn;
 import soilwat.SW_WEATHER_HISTORY;
 import soilwat.SW_WEATHER_HISTORY.WeatherException;
 
@@ -53,6 +54,7 @@ public class WeatherData {
 	private PreparedStatement insertClimate;
 	private PreparedStatement insertSites;
 	private PreparedStatement insertScenarios;
+	private LogFileIn log;
 	//private soilwat.SW_WEATHER_HISTORY hist;
 	
 	public class YearData {
@@ -79,7 +81,8 @@ public class WeatherData {
 	private List<MapMarkerDot> sites = new ArrayList<MapMarkerDot>();
 	private List<YearData> weatherData = new ArrayList<YearData>();
 	
-	public WeatherData(Path weatherDB) {
+	public WeatherData(LogFileIn log,Path weatherDB) {
+		this.log = log;
 		try {
 			Class.forName("org.sqlite.JDBC");
 		} catch (ClassNotFoundException e) {
@@ -90,7 +93,8 @@ public class WeatherData {
 		this.connect();
 	}
 	
-	public WeatherData(String weatherDB) {
+	public WeatherData(LogFileIn log,String weatherDB) {
+		this.log = log;
 		try {
 			Class.forName("org.sqlite.JDBC");
 		} catch (ClassNotFoundException e) {
@@ -101,7 +105,8 @@ public class WeatherData {
 		this.connect();
 	}
 
-	public WeatherData() {
+	public WeatherData(LogFileIn log) {
+		this.log = log;
 		Path weatherDB = Paths.get("/media/ryan/Storage/WeatherData/dbWeatherData_GTD.sqlite");
 		try {
 			Class.forName("org.sqlite.JDBC");
@@ -1373,7 +1378,7 @@ public class WeatherData {
 						scenarioWeatherData.set(i, null);
 				}
 
-				hist = new SW_WEATHER_HISTORY();
+				hist = new SW_WEATHER_HISTORY(log);
 				for (YearData year : this.getDataNew(connection, Site_id, Scenario, 0, 5000)) {
 					hist.add_year(year.year, year.ppt, year.Tmax, year.Tmin);
 				}
@@ -1396,7 +1401,7 @@ public class WeatherData {
 				if (scenarioWeatherData.get(0) == null) { // Make sure we have
 															// current scenario,
 															// should have
-					hist = new SW_WEATHER_HISTORY();
+					hist = new SW_WEATHER_HISTORY(log);
 					for (YearData year : this.getDataNew(connection, Site_id, 1, 0, 5000)) {
 						hist.add_year(year.year, year.ppt, year.Tmax, year.Tmin);
 					}

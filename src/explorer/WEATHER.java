@@ -52,6 +52,8 @@ import javax.swing.JComboBox;
 
 import org.openstreetmap.gui.jmapviewer.SiteEvent;
 
+import soilwat.LogFileIn;
+
 public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent, Converter {
 	
 	private static class DirectoriesFilter implements Filter<Path> {
@@ -89,13 +91,15 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 	private JComboBox<Integer> comboBox_folder_end;
 	private JButton btn_folder_load;
 	private String weatherPrefix;
+	private LogFileIn log;
 	
 	JButton btn_weather_historyAdd;
 	JButton btn_weather_historyRemove;
 	
 	private int list_index=-1;
 	
-	public WEATHER(soilwat.SW_WEATHER.WEATHER_INPUT_DATA weatherSetupIn, soilwat.SW_WEATHER_HISTORY weatherHist, soilwat.SW_FILES.FILES_INPUT_DATA data) {
+	public WEATHER(LogFileIn log, soilwat.SW_WEATHER.WEATHER_INPUT_DATA weatherSetupIn, soilwat.SW_WEATHER_HISTORY weatherHist, soilwat.SW_FILES.FILES_INPUT_DATA data) {
+		this.log = log;
 		this.weatherHist = weatherHist;
 		this.weatherSetupIn = weatherSetupIn;
 		weatherPrefix = data.WeatherPathAndPrefix;
@@ -725,7 +729,7 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 				
 		        if (returnVal == JFileChooser.APPROVE_OPTION) {
 		        	Path weatherDB = fc.getSelectedFile().toPath();
-		        	WeatherData data = new WeatherData(weatherDB);
+		        	WeatherData data = new WeatherData(log,weatherDB);
 		        	if(data.getVersion() != 1) {
 		    			Object[] options = {"Yes","No"};
 		    			int choice = JOptionPane.showOptionDialog(null, "Weather database is a old version, upgrade?", "Weather Data", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
@@ -737,7 +741,7 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 		    			}
 		    		} else {
 		    			data.closeConnection();
-	    				DatabaseWeatherSelector dbWeatherTool = new DatabaseWeatherSelector(weatherDB, weatherHist);
+	    				DatabaseWeatherSelector dbWeatherTool = new DatabaseWeatherSelector(log,weatherDB, weatherHist);
 	    		    	dbWeatherTool.addSiteEventListener(getInstance());
 	    		    	dbWeatherTool.pack();
 	    		    	dbWeatherTool.setVisible(true);
@@ -1619,7 +1623,7 @@ public class WEATHER implements ListSelectionListener, ActionListener, SiteEvent
 
 	@Override
 	public void conversionComplete(Path weatherDB) {
-		DatabaseWeatherSelector dbWeatherTool = new DatabaseWeatherSelector(weatherDB, weatherHist);
+		DatabaseWeatherSelector dbWeatherTool = new DatabaseWeatherSelector(log,weatherDB, weatherHist);
     	dbWeatherTool.addSiteEventListener(getInstance());
     	dbWeatherTool.pack();
     	dbWeatherTool.setVisible(true);

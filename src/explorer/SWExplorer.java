@@ -88,8 +88,7 @@ public class SWExplorer implements ActionListener, MenuListener{
 			} else {
 				inputData = new InputData();
 				try {
-					control.onReadInputs(filesIn);
-					control.onGetInput(inputData);
+					inputData.onRead(filesIn);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -101,7 +100,7 @@ public class SWExplorer implements ActionListener, MenuListener{
 			prod = new PROD(inputData.prodIn);
 			estab = new ESTABL(inputData.estabIn);
 			cloud = new CLOUD(inputData.cloudIn);
-			weather = new WEATHER(inputData.weatherSetupIn, inputData.weatherHist, inputData.filesIn);
+			weather = new WEATHER(inputData.log, inputData.weatherSetupIn, inputData.weatherHist, inputData.filesIn);
 			markov = new MARKOV(inputData.markovIn, inputData.weatherHist);
 			swc = new SWC(inputData.swcSetupIn, inputData.swcHist);
 			out = new OUTPUT(inputData.outputSetupIn);
@@ -145,8 +144,7 @@ public class SWExplorer implements ActionListener, MenuListener{
 			if(Project!=null)
 				inputData.filesIn.ProjectDirectory = Project;
 			try {
-				control.onSetInput(inputData);
-				control.onWriteOutputs(inputData.filesIn.ProjectDirectory.toString());
+				inputData.onWrite(inputData.filesIn.ProjectDirectory.toString());
 				if(control.onGetLog().size() != 0)
 					files.textArea_logFile.setText(control.onGetLog().toString());
 					//JOptionPane.showMessageDialog(null, control.onGetLog(),"Saved", JOptionPane.INFORMATION_MESSAGE);
@@ -159,6 +157,7 @@ public class SWExplorer implements ActionListener, MenuListener{
 			tabbedPane.setSelectedIndex(0);			
 			control.onGetLog().clear();
 			try {
+				control.onSetInput(inputData);
 				control.onStartModel(false, true, files.getSaveOutData());
 				if(control.onGetLog().size() != 0)
 					files.textArea_logFile.setText(control.onGetLog().toString());

@@ -515,7 +515,7 @@ public class MARKOV implements ListSelectionListener, ActionListener {
 	    		if(formattedTextField_insertYear.getText() != "") {
 	    			double tmpmax=0, tmpmin=0, PPT=0;
 	    			
-	    			soilwat.SW_MARKOV markov = new SW_MARKOV();
+	    			soilwat.SW_MARKOV markov = new SW_MARKOV(markovIn.getLog());
 	    			this.onGetValues();//save
 	    			markov.onSetInput(this.markovIn);
 	    			markov.setPpt_events(0);
