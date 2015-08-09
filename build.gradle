@@ -1,0 +1,61 @@
+import org.ajoberstar.grgit.*
+apply plugin: 'java'
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath 'org.ajoberstar:gradle-git:0.8.0'
+	}
+}
+
+task clone {
+	File dir = new File('JsoilWat')
+	if(!dir.exists()) {
+		def grgit = Grgit.clone(dir: dir, uri: 'https://github.com/Burke-Lauenroth-Lab/JsoilWat')
+	}
+}
+
+task buildJsoilWat(type: GradleBuild) {
+	buildFile = 'JsoilWat/build.gradle'
+	tasks = ['build']
+}
+
+sourceCompatibility = 1.7
+version = '1.0'
+
+sourceSets {
+	main {
+		java {
+			srcDirs = ["src"]
+		}
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	compile group: 'org.jfree', name: 'jcommon', version: '1.0.21'
+	compile group: 'org.jfree', name: 'jfreechart', version: '1.0.17'
+	compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.7.15-M1'
+	compile group: 'com.jgoodies', name: 'forms', version: '1.2.1'
+	compile files('JsoilWat/build/libs/JsoilWat-1.0.jar')
+}
+
+jar {
+	manifest {
+		attributes 'Main-Class':'explorer.SWExplorer',
+					'Implementation-Title': 'SoilWat Explorer',
+					'Implementation-Version': version
+	}
+	
+	from {
+		configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+	}
+}
+
+compileJava.dependsOn clone
+compileJava.dependsOn buildJsoilWat
